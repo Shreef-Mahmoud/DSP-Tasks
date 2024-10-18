@@ -214,8 +214,8 @@ myframe = Tk()
 myframe.title("DSP")
 myframe.geometry("600x600")
 
-# p1 = PhotoImage(file="C:/DSP/icon.png")
-# myframe.iconphoto(False, p1)
+p1 = PhotoImage(file="C:/DSP/icon.png")
+myframe.iconphoto(False, p1)
 
 mylabel =ttk.Label(myframe, text="Select Signal", font="Calibre 20 bold")
 mylabel.place(relx=0.5, rely=0.5, y=-250, anchor="center")
