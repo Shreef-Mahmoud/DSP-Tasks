@@ -1,11 +1,18 @@
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk, Toplevel, Label, Entry, Button, StringVar
+from tkinter import simpledialog
 from tkinter import filedialog
 from tkinter import messagebox as mb
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 
+def get_two_inputs():
+    first_value = simpledialog.askstring("Input", "Enter the first value:")
+    
+    second_value = simpledialog.askstring("Input", "Enter the second value:")
+    
+    return first_value, second_value
 
 def SignalSamplesAreEqual(indices,samples):
     file_name = filedialog.askopenfilename(title="Choose The Compare File", filetypes=(("text files", ".txt"), ("all files", ".*")))
@@ -39,8 +46,9 @@ def SignalSamplesAreEqual(indices,samples):
             mb.showerror("Test Case Failed", "Your signal has different values from the expected one.")
             return
     mb.showinfo("Test Case Passed", "Test case passed successfully.")
+
 def QuantizationTest1(Your_EncodedValues,Your_QuantizedValues):
-    file_name = filedialog.askopenfilename(title="Choose The Compare File",filetypes=(("text files", ".txt"), ("all files", ".*")))
+    file_name = filedialog.askopenfilename(title="Choose The Compare File", filetypes=(("text files", ".txt"), ("all files", ".*")))
     expectedEncodedValues=[]
     expectedQuantizedValues=[]
     with open(file_name, 'r') as f:
@@ -75,13 +83,12 @@ def QuantizationTest1(Your_EncodedValues,Your_QuantizedValues):
             return
     mb.showinfo("Test Case Passed", "QuantizationTest1 Test case passed successfully.")
 
-
-def QuantizationTest2(Your_IntervalIndices, Your_EncodedValues, Your_QuantizedValues, Your_SampledError):
-    file_name = filedialog.askopenfilename(title="Choose The Compare File",filetypes=(("text files", ".txt"), ("all files", ".*")))
-    expectedIntervalIndices = []
-    expectedEncodedValues = []
-    expectedQuantizedValues = []
-    expectedSampledError = []
+def QuantizationTest2(Your_IntervalIndices,Your_EncodedValues,Your_QuantizedValues,Your_SampledError):
+    file_name = filedialog.askopenfilename(title="Choose The Compare File", filetypes=(("text files", ".txt"), ("all files", ".*")))
+    expectedIntervalIndices=[]
+    expectedEncodedValues=[]
+    expectedQuantizedValues=[]
+    expectedSampledError=[]
     with open(file_name, 'r') as f:
         line = f.readline()
         line = f.readline()
@@ -89,13 +96,13 @@ def QuantizationTest2(Your_IntervalIndices, Your_EncodedValues, Your_QuantizedVa
         line = f.readline()
         while line:
             # process line
-            L = line.strip()
-            if len(L.split(' ')) == 4:
-                L = line.split(' ')
-                V1 = int(L[0])
-                V2 = str(L[1])
-                V3 = float(L[2])
-                V4 = float(L[3])
+            L=line.strip()
+            if len(L.split(' '))==4:
+                L=line.split(' ')
+                V1=int(L[0])
+                V2=str(L[1])
+                V3=float(L[2])
+                V4=float(L[3])
                 expectedIntervalIndices.append(V1)
                 expectedEncodedValues.append(V2)
                 expectedQuantizedValues.append(V3)
@@ -103,21 +110,21 @@ def QuantizationTest2(Your_IntervalIndices, Your_EncodedValues, Your_QuantizedVa
                 line = f.readline()
             else:
                 break
-    if (len(Your_IntervalIndices) != len(expectedIntervalIndices)
-            or len(Your_EncodedValues) != len(expectedEncodedValues)
-            or len(Your_QuantizedValues) != len(expectedQuantizedValues)
-            or len(Your_SampledError) != len(expectedSampledError)):
+    if(len(Your_IntervalIndices)!=len(expectedIntervalIndices)
+     or len(Your_EncodedValues)!=len(expectedEncodedValues)
+      or len(Your_QuantizedValues)!=len(expectedQuantizedValues)
+      or len(Your_SampledError)!=len(expectedSampledError)):
         mb.showerror("Test Case Failed", "Your signal has a different length from the expected one.")
         return
     for i in range(len(Your_IntervalIndices)):
-        if (Your_IntervalIndices[i] != expectedIntervalIndices[i]):
+        if(Your_IntervalIndices[i]!=expectedIntervalIndices[i]):
             mb.showerror("Test Case Failed", "Your signal has a different indicies from the expected one.")
             return
     for i in range(len(Your_EncodedValues)):
-        if (Your_EncodedValues[i] != expectedEncodedValues[i]):
+        if(Your_EncodedValues[i]!=expectedEncodedValues[i]):
             mb.showerror("Test Case Failed", "Your EncodedValues have different EncodedValues from the expected one.")
             return
-
+        
     for i in range(len(expectedQuantizedValues)):
         if abs(Your_QuantizedValues[i] - expectedQuantizedValues[i]) < 0.01:
             continue
@@ -222,32 +229,75 @@ def normalize_signal(signal, range_type='-1 to 1'):
 
     return normalized_signal
 
-def quantize_signal(signal, num_bits=None, num_levels=None):
+def quantize_signal():
+    filepath = openFile()
+    num_bits, num_levels = get_two_inputs()
+
     if num_bits:
-        num_levels = 2 ** num_bits
+        num_levels = 2 ** int(num_bits)
     elif num_levels is None:
         raise ValueError("You must provide either number of bits or number of levels.")
+    
+    num_levels = int(num_levels)
+    num_bits = math.log2(num_levels)
+    num_bits = int(num_bits)
+
+    indices, samples = readfile(filepath)
+    signal = np.array(samples)
+
     min_amp = np.min(signal)
     max_amp = np.max(signal)
     delta = (max_amp - min_amp) / num_levels
+
     intVaral = []
     midpoints = []
-    quantized_signal = np.zeros_like(signal)
+    start = min_amp
+
     for i in range(num_levels):
-        start = min_amp
-        z = min_amp+delta
-        intVaral.append([start, z])
-        midpoints[i] =(start+z) / 2
+        end = round(start + delta , 5)
+        intVaral.append([start, end])
+        midpoints.append(round((start + end) / 2, 5))
+        start = end 
+
+    quantized_signal = np.zeros_like(signal)
+    interval_indices = []
+
     for i in range(len(signal)):
         for j in range(num_levels):
-            if intVaral[j] <= signal[i] < intVaral[j + 1]:
+            if intVaral[j][0] < signal[i] <= intVaral[j][1]:
                 quantized_signal[i] = midpoints[j]
+                interval_indices.append(j+1)
                 break
-    error = signal - quantized_signal
+            elif(signal[i] == min_amp):
+                quantized_signal[i] = midpoints[0]
+                interval_indices.append(1)
+                break
+
+    error = quantized_signal - signal
     N = len(signal)
-    average_power_error = np.sum(error**2) / N
-    # encoded_signal = np.round(np.log2(num_levels))
-    return quantized_signal, error, average_power_error
+    average_error = np.sum(error) / N
+
+    indices = list(indices)
+    samples = list(quantized_signal)
+
+    interval_indices_binary = []
+    for i in range(len(quantized_signal)):
+        bit_string = format(interval_indices[i]-1, f'0{num_bits}b')
+        interval_indices_binary.append(bit_string)
+
+
+    mb.showinfo("Average Error", "The average error is: " + str(average_error))
+
+    plotingSignal(indices, samples , len(indices))
+
+    chooseTest = mb.askquestion("Which Test", "For the first test enter yes otherwise enter no")
+
+    if(chooseTest == "yes"):
+        QuantizationTest1(interval_indices_binary , samples)
+    else:
+        QuantizationTest2(interval_indices , interval_indices_binary ,samples , error )
+
+
 def mathOperation ():
 
     if operations.get()=="Add":
@@ -341,13 +391,16 @@ def mathOperation ():
 
         plotingSignal(indices, samples, len(indices))
 
+    elif operations.get() == "Quantize":
+        quantize_signal()
+
 def plotingSignal(indices, samples, samplingFrequency):
     indicesArr = np.array(indices)
     samplesArr = np.array(samples)
 
     fig1, ax1 = plt.subplots() 
     ax1.stem(indicesArr, samplesArr) 
-    ax1.set_xlim(0, samplingFrequency * 0.1)  
+    # ax1.set_xlim(0, samplingFrequency * 0.1)  
     ax1.set_xlabel("Sample Index")
     ax1.set_ylabel("Amplitude")
     ax1.set_title("Digital Signal")
@@ -355,7 +408,7 @@ def plotingSignal(indices, samples, samplingFrequency):
     timeArr = indicesArr / samplingFrequency
     fig2, ax2 = plt.subplots()
     ax2.plot(timeArr, samplesArr) 
-    ax2.set_xlim(0, 0.1) 
+    # ax2.set_xlim(0, 0.1) 
     ax2.set_xlabel("Time (seconds)")
     ax2.set_ylabel("Amplitude")
     ax2.set_title("Analog Signal")
@@ -363,7 +416,8 @@ def plotingSignal(indices, samples, samplingFrequency):
 
     plt.show()
 
-    SignalSamplesAreEqual(indices, samples)
+    if(operations.get() != "Quantize"):
+        SignalSamplesAreEqual(indices, samples)
 
 
 myframe = Tk()
@@ -383,7 +437,7 @@ mycombo1.current(0)
 label =ttk.Label(myframe, text="Arithmetic Operations", font="Calibre 20 bold")
 label.place(relx=0.5, rely=0.5, x=400, y=-250, anchor="center")
 
-operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "quantize"], width=47)
+operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize"], width=47)
 operations.place(relx=0.5, rely=0.5, x=400, y=-200, anchor="center")
 operations.current(0)
 
