@@ -3,16 +3,25 @@ from tkinter import ttk, Toplevel, Label, Entry, Button, StringVar
 from tkinter import simpledialog
 from tkinter import filedialog
 from tkinter import messagebox as mb
+from PIL import Image, ImageTk
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 
 def get_two_inputs():
-    first_value = simpledialog.askstring("Input", "Enter the first value:")
-    
-    second_value = simpledialog.askstring("Input", "Enter the second value:")
-    
-    return first_value, second_value
+    choice = simpledialog.askstring("Choice", "Do you want to enter num_bits or num_levels? (Type 'bits' or 'levels')")
+
+    if choice == 'bits':
+        num_bits = simpledialog.askstring("Input", "Enter num_bits:")
+        num_levels = 2 ** int(num_bits)
+    elif choice == 'levels':
+        num_levels = simpledialog.askstring("Input", "Enter num_levels:")
+        num_bits = int(math.log2(int(num_levels)))
+    else:
+        mb.showerror("Input Error", "Please type 'bits' or 'levels'.")
+        return None, None
+
+    return num_bits, num_levels
 
 def SignalSamplesAreEqual(indices,samples):
     file_name = filedialog.askopenfilename(title="Choose The Compare File", filetypes=(("text files", ".txt"), ("all files", ".*")))
@@ -177,7 +186,7 @@ def generateSignal():
     phaseShift = float(mytext4.get())
 
     if samplingFrequency < (2 *analogfrequency):
-        mb.showerror(title="Sampling Theory", message="Wrong Sampling Frequency\nhint : Sampling Frequency must be greater than 2 * Frequency")
+        mb.showerror("Sampling Theory", "Wrong Sampling Frequency\nhint : Sampling Frequency must be greater than 2 * Frequency")
         return
 
     digitalfrequency = analogfrequency / samplingFrequency
@@ -202,7 +211,7 @@ def generateSignal():
             indices.append(i)
             samples.append(round(pointAmplitude, 3))
     else:
-        mb.showerror(title="Signal Type Error", message="Select A Signal Type (Sin or Cos)")
+        mb.showerror("Signal Type Error", "Select A Signal Type (Sin or Cos)")
         return
     plotingSignal(indices, samples, samplingFrequency)
 
@@ -232,12 +241,6 @@ def normalize_signal(signal, range_type='-1 to 1'):
 def quantize_signal():
     filepath = openFile()
     num_bits, num_levels = get_two_inputs()
-
-    if num_bits:
-        num_levels = 2 ** int(num_bits)
-    elif num_levels is None:
-        raise ValueError("You must provide either number of bits or number of levels.")
-    
     num_levels = int(num_levels)
     num_bits = math.log2(num_levels)
     num_bits = int(num_bits)
@@ -254,7 +257,7 @@ def quantize_signal():
     start = min_amp
 
     for i in range(num_levels):
-        end = round(start + delta , 5)
+        end = round(start + delta, 5)
         intVaral.append([start, end])
         midpoints.append(round((start + end) / 2, 5))
         start = end 
@@ -288,19 +291,19 @@ def quantize_signal():
 
     mb.showinfo("Average Error", "The average error is: " + str(average_error))
 
-    plotingSignal(indices, samples , len(indices))
+    plotingSignal(indices, samples, len(indices))
 
     chooseTest = mb.askquestion("Which Test", "For the first test enter yes otherwise enter no")
 
     if(chooseTest == "yes"):
-        QuantizationTest1(interval_indices_binary , samples)
+        QuantizationTest1(interval_indices_binary, samples)
     else:
-        QuantizationTest2(interval_indices , interval_indices_binary ,samples , error )
+        QuantizationTest2(interval_indices, interval_indices_binary, samples, error)
 
 
 def mathOperation ():
 
-    if operations.get()=="Add":
+    if operations.get() == "Add":
         filepath1 = openFile()
         signal1_indices, signal1_samples = readfile(filepath1)
         filepath2 = openFile()
@@ -426,6 +429,13 @@ myframe.geometry("1800x900")
 
 p1 = PhotoImage(file="icon.png")
 myframe.iconphoto(False, p1)
+
+image_path = "C:/DSP/DSP-Tasks/img.png"
+original_image = Image.open(image_path)
+resized_image = original_image.resize((1600, 900))
+background_image = ImageTk.PhotoImage(resized_image)
+background_label = ttk.Label(myframe, image=background_image)
+background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
 mylabel =ttk.Label(myframe, text="Select Signal", font="Calibre 20 bold")
 mylabel.place(relx=0.5, rely=0.5, y=-250, anchor="center")
