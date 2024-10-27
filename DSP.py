@@ -242,7 +242,6 @@ def quantize_signal():
     filepath = openFile()
     num_bits, num_levels = get_two_inputs()
     num_levels = int(num_levels)
-    num_bits = math.log2(num_levels)
     num_bits = int(num_bits)
 
     indices, samples = readfile(filepath)
