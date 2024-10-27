@@ -430,7 +430,7 @@ myframe.geometry("1800x900")
 p1 = PhotoImage(file="icon.png")
 myframe.iconphoto(False, p1)
 
-image_path = "C:/DSP/DSP-Tasks/img.png"
+image_path = "img.png"
 original_image = Image.open(image_path)
 resized_image = original_image.resize((1600, 900))
 background_image = ImageTk.PhotoImage(resized_image)
