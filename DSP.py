@@ -299,6 +299,74 @@ def quantize_signal():
     else:
         QuantizationTest2(interval_indices, interval_indices_binary, samples, error)
 
+def DFT_Operation():
+    filepath = openFile()
+    indices, samples = readfile(filepath)
+
+    DFTresult = []
+    
+    for i in range(len(indices)):
+        temp = 0 + 0j
+        for x in range(len(indices)):
+            a = samples[x] * (math.cos(2 * math.pi * i *x / 8) -math.sin(2 * math.pi * i *x / 8) *1j )
+            temp += a
+        DFTresult.append(temp)
+    
+    amplitude_list = []
+    angle_list = []
+
+    # compare_amplitude_list = []
+    # compare_angle_list = []
+
+    for i in range(len(DFTresult)):
+        angle = math.atan2( np.imag(DFTresult[i]) ,  np.real(DFTresult[i]) ) 
+        amplitude = math.sqrt( math.pow(np.real(DFTresult[i]) ,2 ) + math.pow(np.imag(DFTresult[i] ) , 2  ) )
+        
+        # formatted_amplitude = f"{amplitude:.14f}f"
+        # formatted_angle = f"{angle:.14f}f"
+
+        amplitude_list.append(amplitude)
+        angle_list.append(angle)
+
+        # compare_amplitude_list.append(formatted_amplitude)
+        # compare_angle_list.append(formatted_angle)
+    
+
+    print(amplitude_list)
+    print("\n\n")
+    print(angle_list)
+
+    fs = simpledialog.askstring("Input", "Enter The Sampling Frequency")
+    fs = float(fs)
+    ts = 1/fs
+
+    omega = (2 * math.pi) / ts * len(DFTresult)
+
+    frequency_domain_indices = []
+    temp = 0
+    for i in range(len(DFTresult)):
+        temp += omega
+        frequency_domain_indices.append(temp)
+
+    indicesArr = np.array(frequency_domain_indices)
+    samplesArr_amplitude = np.array(amplitude_list)
+    samplesArr_Angle = np.array(angle_list)
+
+    fig1, ax1 = plt.subplots() 
+    ax1.stem(indicesArr, samplesArr_amplitude) 
+    ax1.set_xlabel("Amplitude")
+    ax1.set_ylabel("Frequency")
+    ax1.set_title("Signal Amplitude Frequncy Domain")
+
+
+    fig1, ax1 = plt.subplots() 
+    ax1.stem(indicesArr, samplesArr_Angle) 
+    ax1.set_xlabel("Angle (in radian)")
+    ax1.set_ylabel("Frequency")
+    ax1.set_title("Signal Angle Frequncy Domain")
+
+    plt.show()
+
 
 def mathOperation ():
 
@@ -395,6 +463,9 @@ def mathOperation ():
 
     elif operations.get() == "Quantize":
         quantize_signal()
+    
+    elif operations.get() == "DFT":
+        DFT_Operation()
 
 def plotingSignal(indices, samples, samplingFrequency):
     indicesArr = np.array(indices)
@@ -446,7 +517,7 @@ mycombo1.current(0)
 label =ttk.Label(myframe, text="Arithmetic Operations", font="Calibre 20 bold")
 label.place(relx=0.5, rely=0.5, x=400, y=-250, anchor="center")
 
-operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize"], width=47)
+operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize" ,"DFT"], width=47)
 operations.place(relx=0.5, rely=0.5, x=400, y=-200, anchor="center")
 operations.current(0)
 
