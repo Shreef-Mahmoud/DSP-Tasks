@@ -168,6 +168,38 @@ def readfile(filepath):
             line = f.readline()  # move to the next line
     return expected_indices, expected_samples
 
+def readfile_DFT(filepath):
+    expected_indices = []
+    expected_samples = []
+    with open(filepath, 'r') as f:
+        SignalType = bool(f.readline().strip())
+        IsPeriodic = bool(f.readline().strip())
+        N1 = int(f.readline().strip())
+        line = f.readline()
+        
+        while line:
+            L = line.strip()
+            if len(L.split(',')) == 2:
+                L = L.split(',')
+                
+                # Process V1 for [0] and remove 'f' if present
+                V1_str = L[0].strip()
+                if V1_str.endswith('f'):
+                    V1_str = V1_str[:-1]
+                V1 = float(V1_str)  # Convert to integer
+                
+                # Process V2 for [1] and remove 'f' if present
+                V2_str = L[1].strip()
+                if V2_str.endswith('f'):
+                    V2_str = V2_str[:-1]
+                V2 = float(V2_str)  # Convert to float
+
+                expected_indices.append(V1)
+                expected_samples.append(V2)
+            
+            line = f.readline()  # Move to the next line
+    return expected_indices, expected_samples
+
 def openFile():
     filepath = filedialog.askopenfilename(title="Select File", filetypes=(("text files", ".txt"), ("all files", ".*")))
     if filepath:
@@ -370,55 +402,32 @@ def DFT_Operation():
 
 def IDFT_Operation():
     filepath = openFile()
-    indices, samples = readfile(filepath)
+    amp, phase = readfile_DFT(filepath)
 
+    N = len(amp)  # Number of samples
     IDFTresult = []
 
-    for n in range(len(indices)):
+    # Construct the complex array from amplitude and phase
+    values = np.array([amplitude * (math.cos(phase) + 1j * math.sin(phase)) for amplitude, phase in zip(amp, phase)])
+
+    for n in range(N):
         temp = 0 + 0j
-        for k in range(len(indices)):
-            a = samples[k] * (math.cos(2 * math.pi * k * n / len(indices)) + math.sin(2 * math.pi * k * n / len(indices)) * 1j)
+        for k in range(N):
+            a = values[k] * (math.cos(2 * math.pi * k * n / N) + 1j * math.sin(2 * math.pi * k * n / N))
             temp += a
-        temp /= len(indices)
+        temp /= N 
         IDFTresult.append(temp)
 
-    real_part_list = []
-    imag_part_list = []
+    rounded_IDFTresult = [round(temp.real, 5) + round(temp.imag, 5) * 1j for temp in IDFTresult]
+    
+    samples = np.real(rounded_IDFTresult)
+    samples = list(samples)
 
-    for i in range(len(IDFTresult)):
-        real_part = np.real(IDFTresult[i])
-        imag_part = np.imag(IDFTresult[i])
+    indices = []
+    for i in range(len(samples)):
+        indices.append(i)
 
-        real_part_list.append(real_part)
-        imag_part_list.append(imag_part)
-
-    print(real_part_list)
-    print("\n\n")
-    print(imag_part_list)
-
-    fs = simpledialog.askstring("Input", "Enter The Sampling Frequency")
-    fs = float(fs)
-    ts = 1 / fs
-
-    time_domain_indices = [n * ts for n in range(len(IDFTresult))]
-
-    indicesArr = np.array(time_domain_indices)
-    samplesArr_real = np.array(real_part_list)
-    samplesArr_imag = np.array(imag_part_list)
-
-    fig1, ax1 = plt.subplots()
-    ax1.stem(indicesArr, samplesArr_real)
-    ax1.set_xlabel("Time")
-    ax1.set_ylabel("Real Part")
-    ax1.set_title("Signal Real Part Time Domain")
-
-    fig2, ax2 = plt.subplots()
-    ax2.stem(indicesArr, samplesArr_imag)
-    ax2.set_xlabel("Time")
-    ax2.set_ylabel("Imaginary Part")
-    ax2.set_title("Signal Imaginary Part Time Domain")
-
-    plt.show()
+    plotingSignal(indices , samples , 1)
 
 
 def mathOperation ():
