@@ -1,5 +1,5 @@
 from tkinter import *
-from tkinter import ttk, Toplevel, Label, Entry, Button, StringVar
+from tkinter import ttk
 from tkinter import simpledialog
 from tkinter import filedialog
 from tkinter import messagebox as mb
@@ -308,7 +308,7 @@ def DFT_Operation():
     for i in range(len(indices)):
         temp = 0 + 0j
         for x in range(len(indices)):
-            a = samples[x] * (math.cos(2 * math.pi * i *x / 8) -math.sin(2 * math.pi * i *x / 8) *1j )
+            a = samples[x] * (math.cos(2 * math.pi * i * x / len(indices)) - math.sin(2 * math.pi * i * x / len(indices)) * 1j)
             temp += a
         DFTresult.append(temp)
     
@@ -319,8 +319,8 @@ def DFT_Operation():
     # compare_angle_list = []
 
     for i in range(len(DFTresult)):
-        angle = math.atan2( np.imag(DFTresult[i]) ,  np.real(DFTresult[i]) ) 
-        amplitude = math.sqrt( math.pow(np.real(DFTresult[i]) ,2 ) + math.pow(np.imag(DFTresult[i] ) , 2  ) )
+        angle = math.atan2(np.imag(DFTresult[i]),  np.real(DFTresult[i]))
+        amplitude = math.sqrt(math.pow(np.real(DFTresult[i]), 2) + math.pow(np.imag(DFTresult[i]), 2))
         
         # formatted_amplitude = f"{amplitude:.14f}f"
         # formatted_angle = f"{angle:.14f}f"
@@ -364,6 +364,59 @@ def DFT_Operation():
     ax1.set_xlabel("Angle (in radian)")
     ax1.set_ylabel("Frequency")
     ax1.set_title("Signal Angle Frequncy Domain")
+
+    plt.show()
+
+
+def IDFT_Operation():
+    filepath = openFile()
+    indices, samples = readfile(filepath)
+
+    IDFTresult = []
+
+    for n in range(len(indices)):
+        temp = 0 + 0j
+        for k in range(len(indices)):
+            a = samples[k] * (math.cos(2 * math.pi * k * n / len(indices)) + math.sin(2 * math.pi * k * n / len(indices)) * 1j)
+            temp += a
+        temp /= len(indices)
+        IDFTresult.append(temp)
+
+    real_part_list = []
+    imag_part_list = []
+
+    for i in range(len(IDFTresult)):
+        real_part = np.real(IDFTresult[i])
+        imag_part = np.imag(IDFTresult[i])
+
+        real_part_list.append(real_part)
+        imag_part_list.append(imag_part)
+
+    print(real_part_list)
+    print("\n\n")
+    print(imag_part_list)
+
+    fs = simpledialog.askstring("Input", "Enter The Sampling Frequency")
+    fs = float(fs)
+    ts = 1 / fs
+
+    time_domain_indices = [n * ts for n in range(len(IDFTresult))]
+
+    indicesArr = np.array(time_domain_indices)
+    samplesArr_real = np.array(real_part_list)
+    samplesArr_imag = np.array(imag_part_list)
+
+    fig1, ax1 = plt.subplots()
+    ax1.stem(indicesArr, samplesArr_real)
+    ax1.set_xlabel("Time")
+    ax1.set_ylabel("Real Part")
+    ax1.set_title("Signal Real Part Time Domain")
+
+    fig2, ax2 = plt.subplots()
+    ax2.stem(indicesArr, samplesArr_imag)
+    ax2.set_xlabel("Time")
+    ax2.set_ylabel("Imaginary Part")
+    ax2.set_title("Signal Imaginary Part Time Domain")
 
     plt.show()
 
@@ -466,6 +519,8 @@ def mathOperation ():
     
     elif operations.get() == "DFT":
         DFT_Operation()
+    elif operations.get() == "IDFT":
+        IDFT_Operation()
 
 def plotingSignal(indices, samples, samplingFrequency):
     indicesArr = np.array(indices)
@@ -517,7 +572,7 @@ mycombo1.current(0)
 label =ttk.Label(myframe, text="Arithmetic Operations", font="Calibre 20 bold")
 label.place(relx=0.5, rely=0.5, x=400, y=-250, anchor="center")
 
-operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize" ,"DFT"], width=47)
+operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize", "DFT", "IDFT"], width=47)
 operations.place(relx=0.5, rely=0.5, x=400, y=-200, anchor="center")
 operations.current(0)
 
