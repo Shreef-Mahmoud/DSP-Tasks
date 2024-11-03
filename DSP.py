@@ -8,6 +8,41 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
+#Use to test the Amplitude of DFT and IDFT
+def SignalComapreAmplitude(SignalInput, SignalOutput):
+    # Check if lengths match, otherwise handle the discrepancy
+    if len(SignalInput) != len(SignalOutput):
+        print("Error: SignalInput and SignalOutput have different lengths.")
+        return False
+
+    # Iterate up to the minimum length of the two lists to avoid IndexError
+    for i in range(len(SignalInput)):
+        if abs(float(SignalInput[i]) - float(SignalOutput[i])) > 0.001:
+            print(f"Amplitude mismatch at index {i}")
+            return False
+    
+    return True
+
+def RoundPhaseShift(P):
+
+    while P<0:
+        P+=2*math.pi
+    return float(P%(2*math.pi))
+
+#Use to test the PhaseShift of DFT
+def SignalComaprePhaseShift(SignalInput = [] ,SignalOutput= []):
+    if len(SignalInput) != len(SignalInput):
+        return False
+    else:
+        for i in range(len(SignalInput)):
+            A=round(SignalInput[i])
+            B=round(SignalOutput[i])
+            if abs(A-B)>0.0001:
+                return False
+            elif A!=B:
+                return False
+        return True
+
 def get_two_inputs():
     choice = simpledialog.askstring("Choice", "Do you want to enter num_bits or num_levels? (Type 'bits' or 'levels')")
 
@@ -171,34 +206,59 @@ def readfile(filepath):
 def readfile_DFT(filepath):
     expected_indices = []
     expected_samples = []
+    
     with open(filepath, 'r') as f:
-        SignalType = bool(f.readline().strip())
-        IsPeriodic = bool(f.readline().strip())
+        SignalType = f.readline().strip().lower() == 'true'
+        IsPeriodic = f.readline().strip().lower() == 'true'
         N1 = int(f.readline().strip())
-        line = f.readline()
         
+        # print(f"SignalType: {SignalType}, IsPeriodic: {IsPeriodic}, N1: {N1}")  # Debug
+
+        line = f.readline()
         while line:
             L = line.strip()
-            if len(L.split(',')) == 2:
+            
+            # Determine the delimiter and split accordingly
+            if ',' in L:
                 L = L.split(',')
-                
-                # Process V1 for [0] and remove 'f' if present
-                V1_str = L[0].strip()
-                if V1_str.endswith('f'):
-                    V1_str = V1_str[:-1]
-                V1 = float(V1_str)  # Convert to integer
-                
-                # Process V2 for [1] and remove 'f' if present
-                V2_str = L[1].strip()
-                if V2_str.endswith('f'):
-                    V2_str = V2_str[:-1]
+            else:
+                L = L.split()
+            
+            # Check if we have the expected number of items after splitting
+            if len(L) != 2:
+                line = f.readline()
+                continue
+            
+            # Process V1
+            V1_str = L[0].strip()
+            if V1_str.endswith('f'):
+                V1_str = V1_str[:-1]
+            try:
+                V1 = float(V1_str)  # Convert to float
+            except ValueError:
+                line = f.readline()
+                continue
+            
+            # Process V2
+            V2_str = L[1].strip()
+            if V2_str.endswith('f'):
+                V2_str = V2_str[:-1]
+            try:
                 V2 = float(V2_str)  # Convert to float
-
-                expected_indices.append(V1)
-                expected_samples.append(V2)
+            except ValueError:
+                line = f.readline()
+                continue
+            
+            expected_indices.append(V1)
+            expected_samples.append(V2)
             
             line = f.readline()  # Move to the next line
+    
     return expected_indices, expected_samples
+
+
+
+
 
 def openFile():
     filepath = filedialog.askopenfilename(title="Select File", filetypes=(("text files", ".txt"), ("all files", ".*")))
@@ -364,10 +424,6 @@ def DFT_Operation():
         # compare_angle_list.append(formatted_angle)
     
 
-    print(amplitude_list)
-    print("\n\n")
-    print(angle_list)
-
     fs = simpledialog.askstring("Input", "Enter The Sampling Frequency")
     fs = float(fs)
     ts = 1/fs
@@ -398,6 +454,22 @@ def DFT_Operation():
     ax1.set_title("Signal Angle Frequncy Domain")
 
     plt.show()
+
+    Output = openFile()
+    amp, phase = readfile_DFT(Output)
+
+    if(SignalComapreAmplitude(amplitude_list , amp)):
+        mb.showinfo("Test Case Passed", "Amplitude Test case passed successfully.")
+
+    for i in range(len(angle_list)):
+        angle_list[i] = RoundPhaseShift(angle_list[i])
+        angle_list[i] = round(angle_list[i] , 7)
+        phase[i] = RoundPhaseShift(phase[i])
+        phase[i] = round(phase[i] , 7)
+
+    if(SignalComaprePhaseShift(angle_list , phase)):
+        mb.showinfo("Test Case Passed", "Phase Shift Test case passed successfully.")
+
 
 
 def IDFT_Operation():
