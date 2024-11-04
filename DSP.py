@@ -428,7 +428,7 @@ def DFT_Operation():
     fs = float(fs)
     ts = 1/fs
 
-    omega = (2 * math.pi) / ts * len(DFTresult)
+    omega = (2 * math.pi) / (ts * len(DFTresult))
 
     frequency_domain_indices = []
     temp = 0
