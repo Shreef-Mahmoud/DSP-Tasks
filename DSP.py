@@ -184,6 +184,45 @@ def QuantizationTest2(Your_IntervalIndices,Your_EncodedValues,Your_QuantizedValu
             return
     mb.showinfo("Test Case Passed", "QuantizationTest1 Test case passed successfully.")
 
+def Shift_Fold_Signal(Your_indices,Your_samples):  
+    file_name = filedialog.askopenfilename(title="Choose The Compare File", filetypes=(("text files", ".txt"), ("all files", ".*")))    
+    expected_indices=[]
+    expected_samples=[]
+    with open(file_name, 'r') as f:
+        line = f.readline()
+        line = f.readline()
+        line = f.readline()
+        line = f.readline()
+        while line:
+            # process line
+            L=line.strip()
+            if len(L.split(' '))==2:
+                L=line.split(' ')
+                V1=int(L[0])
+                V2=float(L[1])
+                expected_indices.append(V1)
+                expected_samples.append(V2)
+                line = f.readline()
+            else:
+                break
+    print("Current Output Test file is: ")
+    print(file_name)
+    print("\n")
+    if (len(expected_samples)!=len(Your_samples)) and (len(expected_indices)!=len(Your_indices)):
+        print("Shift_Fold_Signal Test case failed, your signal have different length from the expected one")
+        return
+    for i in range(len(Your_indices)):
+        if(Your_indices[i]!=expected_indices[i]):
+            print("Shift_Fold_Signal Test case failed, your signal have different indicies from the expected one") 
+            return
+    for i in range(len(expected_samples)):
+        if abs(Your_samples[i] - expected_samples[i]) < 0.01:
+            continue
+        else:
+            print("Shift_Fold_Signal Test case failed, your signal have different values from the expected one") 
+            return
+    mb.showinfo("Test Case Passed", "Shift_Fold_Signal Test case passed successfully")
+
 def readfile(filepath):
     expected_indices = []
     expected_samples = []
@@ -255,9 +294,6 @@ def readfile_DFT(filepath):
             line = f.readline()  # Move to the next line
     
     return expected_indices, expected_samples
-
-
-
 
 
 def openFile():
@@ -501,6 +537,36 @@ def IDFT_Operation():
 
     plotingSignal(indices , samples , 1)
 
+def shifting_signals(isFolded):
+    filepath = openFile()
+    indices, samples = readfile(filepath)
+
+    shift_amount = int(shift.get())
+    indices_arr = np.array(indices)
+
+    if(isFolded):
+
+        inverted_indices =[]
+        inverted_samples = []
+
+        for i in range(0 , len(samples) ):
+            inverted_indices.append(indices[len(indices) - (i+1)])
+            inverted_samples.append(samples[len(samples) - (i+1)])
+
+        indices_arr = np.array(inverted_indices)
+        indices_arr *= -1
+        samples = inverted_samples
+        indices_arr += shift_amount
+
+    else:
+        indices_arr -= shift_amount
+        
+    indices = list(indices_arr)
+
+
+    plotingSignal(indices ,samples , len(samples) )
+    Shift_Fold_Signal(indices,samples)
+
 
 def mathOperation ():
 
@@ -602,30 +668,31 @@ def mathOperation ():
         DFT_Operation()
     elif operations.get() == "IDFT":
         IDFT_Operation()
+    elif operations.get() == "Fold" or operations.get() == "Shift":
+        shifting_signals(True if operations.get() == "Fold" else False)
 
 def plotingSignal(indices, samples, samplingFrequency):
     indicesArr = np.array(indices)
     samplesArr = np.array(samples)
 
-    fig1, ax1 = plt.subplots() 
-    ax1.stem(indicesArr, samplesArr) 
-    # ax1.set_xlim(0, samplingFrequency * 0.1)  
+    fig1, ax1 = plt.subplots()
+    ax1.stem(indicesArr, samplesArr)
+    ax1.set_xlim(indicesArr[0], indicesArr[0] + samplingFrequency * 0.1) 
     ax1.set_xlabel("Sample Index")
     ax1.set_ylabel("Amplitude")
     ax1.set_title("Digital Signal")
 
     timeArr = indicesArr / samplingFrequency
     fig2, ax2 = plt.subplots()
-    ax2.plot(timeArr, samplesArr) 
-    # ax2.set_xlim(0, 0.1) 
+    ax2.plot(timeArr, samplesArr)
+    ax2.set_xlim(timeArr[0], timeArr[0] + 0.1) 
     ax2.set_xlabel("Time (seconds)")
     ax2.set_ylabel("Amplitude")
     ax2.set_title("Analog Signal")
     ax2.axhline(0, color='black', linewidth=1)
-
     plt.show()
 
-    if(operations.get() != "Quantize"):
+    if(operations.get() != "Quantize" and operations.get() != "Fold" and operations.get() != "Shift" ):
         SignalSamplesAreEqual(indices, samples)
 
 
@@ -653,7 +720,7 @@ mycombo1.current(0)
 label =ttk.Label(myframe, text="Arithmetic Operations", font="Calibre 20 bold")
 label.place(relx=0.5, rely=0.5, x=400, y=-250, anchor="center")
 
-operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize", "DFT", "IDFT"], width=47)
+operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize", "DFT", "IDFT" , "Fold" , "Shift"], width=47)
 operations.place(relx=0.5, rely=0.5, x=400, y=-200, anchor="center")
 operations.current(0)
 
@@ -687,11 +754,18 @@ multilab.place(relx=0.5, rely=0.5, x=-450, y=135, anchor="center")
 multi = ttk.Entry(myframe, width=50)
 multi.place(relx=0.5, rely=0.5, x=-450, y=160, anchor="center")
 
+mylab = ttk.Label(myframe, text="Enter The Shifting Amount")
+mylab.place(relx=0.5, rely=0.5, x=-450, y=195, anchor="center")
+
+shift = ttk.Entry(myframe, width=50)
+shift.insert(END, '0')
+shift.place(relx=0.5, rely=0.5, x=-450, y=220, anchor="center")
+
 mybottom =ttk.Button(myframe,text="Display Result",width=50 , command=generateSignal)
-mybottom.place(relx=0.5, rely=0.5, y=210,anchor="center")
+mybottom.place(relx=0.5, rely=0.5, y=280,anchor="center")
 
 mybottom2 = ttk.Button(myframe, text="Read File", width=50, command=readFileDirct)
-mybottom2.place(relx=0.5, rely=0.5, x=400, y=210, anchor="center")
+mybottom2.place(relx=0.5, rely=0.5, x=400, y=280, anchor="center")
 
 def move_1(event):
     mytext2.focus()
