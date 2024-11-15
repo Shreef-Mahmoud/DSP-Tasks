@@ -561,17 +561,15 @@ def shifting_signals(isFolded):
     plotingSignal(indices, samples, len(samples))
     Shift_Fold_Signal(indices, samples)
 
-    def first_derivative(signal):
-
+def first_derivative(signal):
         y = [signal[n] - signal[n - 1] if n > 0 else signal[n] for n in range(len(signal))]
         return y
 
-    def second_derivative(signal):
-
+def second_derivative(signal):
         y = [signal[n + 1] - 2 * signal[n] + signal[n - 1] if 0 < n < len(signal) - 1 else signal[n] for n in range(len(signal))]
         return y
 
-    def DerivativeSignal():
+def DerivativeSignal():
         InputSignal = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0,
                        18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0, 32.0, 33.0,
                        34.0, 35.0, 36.0, 37.0, 38.0, 39.0, 40.0, 41.0, 42.0, 43.0, 44.0, 45.0, 46.0, 47.0, 48.0, 49.0,
@@ -595,7 +593,7 @@ def shifting_signals(isFolded):
 
         FirstDrev = first_derivative(InputSignal)
         SecondDrev = second_derivative(InputSignal)
-
+        
         """
         End
         """
@@ -730,6 +728,9 @@ def mathOperation ():
     elif operations.get() == "Fold" or operations.get() == "Shift":
         shifting_signals(True if operations.get() == "Fold" else False)
 
+    elif operations.get() == "Sharpening":
+        DerivativeSignal()
+
 def plotingSignal(indices, samples, samplingFrequency):
     indicesArr = np.array(indices)
     samplesArr = np.array(samples)
@@ -779,7 +780,7 @@ mycombo1.current(0)
 label =ttk.Label(myframe, text="Arithmetic Operations", font="Calibre 20 bold")
 label.place(relx=0.5, rely=0.5, x=400, y=-250, anchor="center")
 
-operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize", "DFT", "IDFT", "Fold", "Shift", "sharpening"], width=47)
+operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize", "DFT", "IDFT", "Fold", "Shift", "Sharpening"], width=47)
 operations.place(relx=0.5, rely=0.5, x=400, y=-200, anchor="center")
 operations.current(0)
 
