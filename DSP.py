@@ -3,6 +3,8 @@ from tkinter import ttk
 from tkinter import simpledialog
 from tkinter import filedialog
 from tkinter import messagebox as mb
+from tkinter.filedialog import asksaveasfilename
+
 from PIL import Image, ImageTk
 import math
 import numpy as np
@@ -562,11 +564,11 @@ def shifting_signals(isFolded):
     Shift_Fold_Signal(indices, samples)
 
 def first_derivative(signal):
-        y = [signal[n] - signal[n - 1] if n > 0 else signal[n] for n in range(len(signal))]
+        y = [signal[n] - signal[n - 1] if n > 0 else signal[n] for n in range(1, len(signal))]
         return y
 
 def second_derivative(signal):
-        y = [signal[n + 1] - 2 * signal[n] + signal[n - 1] if 0 < n < len(signal) - 1 else signal[n] for n in range(len(signal))]
+        y = [signal[n + 1] - 2 * signal[n] + signal[n - 1] if 0 < n < len(signal) - 1 else signal[n] for n in range(1, len(signal)-1)]
         return y
 
 def DerivativeSignal():
@@ -593,7 +595,6 @@ def DerivativeSignal():
 
         FirstDrev = first_derivative(InputSignal)
         SecondDrev = second_derivative(InputSignal)
-        
         """
         End
         """
@@ -624,6 +625,33 @@ def DerivativeSignal():
         else:
             mb.showerror("Test case failed", "Derivative Test case failed")
         return
+
+def DCT_Operation():
+    filepath = openFile()
+    indices, samples = readfile(filepath)
+    DCTresult = []
+    N = len(samples)
+    for k in range(N):
+        sum_val = 0
+        for n in range(len(indices)):
+            sum_val += samples[n] * np.cos(np.pi / (4 * N) * (2 * n - 1) * (2 * k - 1))
+        DCTresult.append(round(np.sqrt(2 / N) * sum_val, 5))
+        print("DCT Coefficients:")
+        for k in range(len(DCTresult)):
+            print(f"y({k}) = {DCTresult[k]}")
+
+    m = simpledialog.askinteger("Input", "Enter the number of coefficients to save:")
+    if m > len(DCTresult):
+        mb.showerror("Invalid Input", "Please enter a valid number of coefficients.")
+        return
+
+
+    saveFilepath = asksaveasfilename(defaultextension=".txt", filetypes=[("Text Files", "*.txt")])
+    if saveFilepath:
+        with open(saveFilepath, "w") as f:
+            for i in range(m):
+                f.write(f"{DCTresult[i]}\n")
+        mb.showinfo("Success", f"First {m} DCT coefficients saved to {saveFilepath}")
 
 def mathOperation ():
 
@@ -730,6 +758,8 @@ def mathOperation ():
 
     elif operations.get() == "Sharpening":
         DerivativeSignal()
+    elif operations.get() == "DCT":
+        DCT_Operation()
 
 def plotingSignal(indices, samples, samplingFrequency):
     indicesArr = np.array(indices)
@@ -780,7 +810,7 @@ mycombo1.current(0)
 label =ttk.Label(myframe, text="Arithmetic Operations", font="Calibre 20 bold")
 label.place(relx=0.5, rely=0.5, x=400, y=-250, anchor="center")
 
-operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize", "DFT", "IDFT", "Fold", "Shift", "Sharpening"], width=47)
+operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize", "DFT", "IDFT", "Fold", "Shift", "Sharpening", "DCT"], width=47)
 operations.place(relx=0.5, rely=0.5, x=400, y=-200, anchor="center")
 operations.current(0)
 
