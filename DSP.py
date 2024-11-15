@@ -8,14 +8,14 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-#Use to test the Amplitude of DFT and IDFT
+
 def SignalComapreAmplitude(SignalInput, SignalOutput):
-    # Check if lengths match, otherwise handle the discrepancy
+
     if len(SignalInput) != len(SignalOutput):
         print("Error: SignalInput and SignalOutput have different lengths.")
         return False
 
-    # Iterate up to the minimum length of the two lists to avoid IndexError
+
     for i in range(len(SignalInput)):
         if abs(float(SignalInput[i]) - float(SignalOutput[i])) > 0.001:
             print(f"Amplitude mismatch at index {i}")
@@ -29,7 +29,7 @@ def RoundPhaseShift(P):
         P+=2*math.pi
     return float(P%(2*math.pi))
 
-#Use to test the PhaseShift of DFT
+
 def SignalComaprePhaseShift(SignalInput = [] ,SignalOutput= []):
     if len(SignalInput) != len(SignalInput):
         return False
@@ -251,39 +251,39 @@ def readfile_DFT(filepath):
         IsPeriodic = f.readline().strip().lower() == 'true'
         N1 = int(f.readline().strip())
         
-        # print(f"SignalType: {SignalType}, IsPeriodic: {IsPeriodic}, N1: {N1}")  # Debug
+
 
         line = f.readline()
         while line:
             L = line.strip()
             
-            # Determine the delimiter and split accordingly
+
             if ',' in L:
                 L = L.split(',')
             else:
                 L = L.split()
             
-            # Check if we have the expected number of items after splitting
+
             if len(L) != 2:
                 line = f.readline()
                 continue
             
-            # Process V1
+
             V1_str = L[0].strip()
             if V1_str.endswith('f'):
                 V1_str = V1_str[:-1]
             try:
-                V1 = float(V1_str)  # Convert to float
+                V1 = float(V1_str)
             except ValueError:
                 line = f.readline()
                 continue
             
-            # Process V2
+
             V2_str = L[1].strip()
             if V2_str.endswith('f'):
                 V2_str = V2_str[:-1]
             try:
-                V2 = float(V2_str)  # Convert to float
+                V2 = float(V2_str)
             except ValueError:
                 line = f.readline()
                 continue
@@ -291,7 +291,7 @@ def readfile_DFT(filepath):
             expected_indices.append(V1)
             expected_samples.append(V2)
             
-            line = f.readline()  # Move to the next line
+            line = f.readline()
     
     return expected_indices, expected_samples
 
@@ -443,21 +443,15 @@ def DFT_Operation():
     amplitude_list = []
     angle_list = []
 
-    # compare_amplitude_list = []
-    # compare_angle_list = []
+
 
     for i in range(len(DFTresult)):
         angle = math.atan2(np.imag(DFTresult[i]),  np.real(DFTresult[i]))
         amplitude = math.sqrt(math.pow(np.real(DFTresult[i]), 2) + math.pow(np.imag(DFTresult[i]), 2))
-        
-        # formatted_amplitude = f"{amplitude:.14f}f"
-        # formatted_angle = f"{angle:.14f}f"
-
         amplitude_list.append(amplitude)
         angle_list.append(angle)
 
-        # compare_amplitude_list.append(formatted_amplitude)
-        # compare_angle_list.append(formatted_angle)
+
     
 
     fs = simpledialog.askstring("Input", "Enter The Sampling Frequency")
@@ -499,9 +493,9 @@ def DFT_Operation():
 
     for i in range(len(angle_list)):
         angle_list[i] = RoundPhaseShift(angle_list[i])
-        angle_list[i] = round(angle_list[i] , 7)
+        angle_list[i] = round(angle_list[i], 7)
         phase[i] = RoundPhaseShift(phase[i])
-        phase[i] = round(phase[i] , 7)
+        phase[i] = round(phase[i], 7)
 
     if(SignalComaprePhaseShift(angle_list , phase)):
         mb.showinfo("Test Case Passed", "Phase Shift Test case passed successfully.")
@@ -512,10 +506,10 @@ def IDFT_Operation():
     filepath = openFile()
     amp, phase = readfile_DFT(filepath)
 
-    N = len(amp)  # Number of samples
+    N = len(amp)
     IDFTresult = []
 
-    # Construct the complex array from amplitude and phase
+
     values = np.array([amplitude * (math.cos(phase) + 1j * math.sin(phase)) for amplitude, phase in zip(amp, phase)])
 
     for n in range(N):
@@ -535,7 +529,7 @@ def IDFT_Operation():
     for i in range(len(samples)):
         indices.append(i)
 
-    plotingSignal(indices , samples , 1)
+    plotingSignal(indices, samples, 1)
 
 def shifting_signals(isFolded):
     filepath = openFile()
@@ -549,7 +543,7 @@ def shifting_signals(isFolded):
         inverted_indices =[]
         inverted_samples = []
 
-        for i in range(0 , len(samples) ):
+        for i in range(0, len(samples)):
             inverted_indices.append(indices[len(indices) - (i+1)])
             inverted_samples.append(samples[len(samples) - (i+1)])
 
@@ -564,9 +558,74 @@ def shifting_signals(isFolded):
     indices = list(indices_arr)
 
 
-    plotingSignal(indices ,samples , len(samples) )
-    Shift_Fold_Signal(indices,samples)
+    plotingSignal(indices, samples, len(samples))
+    Shift_Fold_Signal(indices, samples)
 
+    def first_derivative(signal):
+
+        y = [signal[n] - signal[n - 1] if n > 0 else signal[n] for n in range(len(signal))]
+        return y
+
+    def second_derivative(signal):
+
+        y = [signal[n + 1] - 2 * signal[n] + signal[n - 1] if 0 < n < len(signal) - 1 else signal[n] for n in range(len(signal))]
+        return y
+
+    def DerivativeSignal():
+        InputSignal = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0,
+                       18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0, 28.0, 29.0, 30.0, 31.0, 32.0, 33.0,
+                       34.0, 35.0, 36.0, 37.0, 38.0, 39.0, 40.0, 41.0, 42.0, 43.0, 44.0, 45.0, 46.0, 47.0, 48.0, 49.0,
+                       50.0, 51.0, 52.0, 53.0, 54.0, 55.0, 56.0, 57.0, 58.0, 59.0, 60.0, 61.0, 62.0, 63.0, 64.0, 65.0,
+                       66.0, 67.0, 68.0, 69.0, 70.0, 71.0, 72.0, 73.0, 74.0, 75.0, 76.0, 77.0, 78.0, 79.0, 80.0, 81.0,
+                       82.0, 83.0, 84.0, 85.0, 86.0, 87.0, 88.0, 89.0, 90.0, 91.0, 92.0, 93.0, 94.0, 95.0, 96.0, 97.0,
+                       98.0, 99.0, 100.0]
+        expectedOutput_first = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        expectedOutput_second = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        """
+        Write your Code here:
+        Start
+        """
+
+        FirstDrev = first_derivative(InputSignal)
+        SecondDrev = second_derivative(InputSignal)
+
+        """
+        End
+        """
+
+        """
+        Testing your Code
+        """
+
+        if (len(FirstDrev) != len(expectedOutput_first)) or (len(SecondDrev) != len(expectedOutput_second)):
+            mb.showinfo("Mismatch", "Mismatch in length.")
+            return
+
+        first, second = True, True
+        for i in range(len(expectedOutput_first)):
+            if abs(FirstDrev[i] - expectedOutput_first[i]) >= 0.01:
+                first = False
+                mb.showerror("derivative", "1st derivative wrong.")
+                return
+
+        for i in range(len(expectedOutput_second)):
+            if abs(SecondDrev[i] - expectedOutput_second[i]) >= 0.01:
+                second = False
+                mb.showerror("derivative", "2nd derivative wrong.")
+                return
+
+        if first and second:
+            mb.showinfo("Test Case Passed", "Derivative Test case passed successfully.")
+        else:
+            mb.showerror("Test case failed", "Derivative Test case failed")
+        return
 
 def mathOperation ():
 
@@ -720,7 +779,7 @@ mycombo1.current(0)
 label =ttk.Label(myframe, text="Arithmetic Operations", font="Calibre 20 bold")
 label.place(relx=0.5, rely=0.5, x=400, y=-250, anchor="center")
 
-operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize", "DFT", "IDFT" , "Fold" , "Shift"], width=47)
+operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize", "DFT", "IDFT", "Fold", "Shift", "sharpening"], width=47)
 operations.place(relx=0.5, rely=0.5, x=400, y=-200, anchor="center")
 operations.current(0)
 
@@ -761,7 +820,7 @@ shift = ttk.Entry(myframe, width=50)
 shift.insert(END, '0')
 shift.place(relx=0.5, rely=0.5, x=-450, y=220, anchor="center")
 
-mybottom =ttk.Button(myframe,text="Display Result",width=50 , command=generateSignal)
+mybottom =ttk.Button(myframe,text="Display Result", width=50, command=generateSignal)
 mybottom.place(relx=0.5, rely=0.5, y=280,anchor="center")
 
 mybottom2 = ttk.Button(myframe, text="Read File", width=50, command=readFileDirct)
