@@ -93,6 +93,35 @@ def SignalSamplesAreEqual(indices,samples):
             return
     mb.showinfo("Test Case Passed", "Test case passed successfully.")
 
+def SignalAreEqual(samples):
+    file_name = filedialog.askopenfilename(title="Choose The Compare File", filetypes=(("text files", ".txt"), ("all files", ".*")))
+    expected_samples = []
+    with open(file_name, 'r') as f:
+        line = f.readline()
+        line = f.readline()
+        line = f.readline()
+        line = f.readline()
+        while line:
+
+            L = line.strip()
+            if len(L.split(' ')) == 2:
+                L = line.split(' ')
+                V2 = float(L[0])
+                expected_samples.append(V2)
+                line = f.readline()
+            else:
+                break
+
+    if len(expected_samples) != len(samples):
+        mb.showerror("Test Case Failed", "Your signal has a different length from the expected one.")
+        return
+    for i in range(len(expected_samples)):
+        if abs(samples[i] - expected_samples[i]) < 0.01:
+            continue
+        else:
+            mb.showerror("Test Case Failed", "Your signal has different values from the expected one.")
+            return
+    mb.showinfo("Test Case Passed", "Test case passed successfully.")
 def QuantizationTest1(Your_EncodedValues,Your_QuantizedValues):
     file_name = filedialog.askopenfilename(title="Choose The Compare File", filetypes=(("text files", ".txt"), ("all files", ".*")))
     expectedEncodedValues=[]
@@ -241,7 +270,7 @@ def readfile(filepath):
                 V2 = float(L[1])
                 expected_indices.append(V1)
                 expected_samples.append(V2)
-            line = f.readline()  # move to the next line
+            line = f.readline()
     return expected_indices, expected_samples
 
 def readfile_DFT(filepath):
@@ -645,7 +674,6 @@ def DCT_Operation():
         mb.showerror("Invalid Input", "Please enter a valid number of coefficients.")
         return
 
-
     saveFilepath = asksaveasfilename(defaultextension=".txt", filetypes=[("Text Files", "*.txt")])
     if saveFilepath:
         with open(saveFilepath, "w") as f:
@@ -653,6 +681,19 @@ def DCT_Operation():
                 f.write(f"{DCTresult[i]}\n")
         mb.showinfo("Success", f"First {m} DCT coefficients saved to {saveFilepath}")
 
+    fig1, ax1 = plt.subplots()
+    ax1.stem(indices, DCTresult)
+    ax1.set_xlabel("Coefficient Index")
+    ax1.set_ylabel("Amplitude")
+    ax1.set_title("DCT Coefficients")
+
+    fig1, ax1 = plt.subplots()
+    ax1.plot(indices, DCTresult)
+    ax1.set_xlabel("Coefficient Index")
+    ax1.set_ylabel("Amplitude")
+    ax1.set_title("DCT Coefficients")
+    plt.show()
+    SignalAreEqual(samples)
 def mathOperation ():
 
     if operations.get() == "Add":
