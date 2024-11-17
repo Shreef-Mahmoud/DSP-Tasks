@@ -106,7 +106,7 @@ def SignalAreEqual(samples):
             L = line.strip()
             if len(L.split(' ')) == 2:
                 L = line.split(' ')
-                V2 = float(L[0])
+                V2 = float(L[1])
                 expected_samples.append(V2)
                 line = f.readline()
             else:
@@ -693,7 +693,7 @@ def DCT_Operation():
     ax1.set_ylabel("Amplitude")
     ax1.set_title("DCT Coefficients")
     plt.show()
-    SignalAreEqual(samples)
+    SignalAreEqual(DCTresult)
 def mathOperation ():
 
     if operations.get() == "Add":
