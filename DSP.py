@@ -821,22 +821,21 @@ def Convolution():
         con_result_indices.append(i)
         con_result_samples.append(conv_sum)
 
+    fig1, ax1 = plt.subplots()
+    ax1.stem(con_result_indices, con_result_samples)
+    ax1.set_xlabel("Sample Index")
+    ax1.set_ylabel("Amplitude")
+    ax1.set_title("Digital Signal")
+
+    fig2, ax2 = plt.subplots()
+    ax2.plot(con_result_indices, con_result_samples)
+    ax2.set_xlabel("Sample index")
+    ax2.set_ylabel("Amplitude")
+    ax2.set_title("Analog Signal")
+    ax2.axhline(0, color='black', linewidth=1)
+    plt.show()
 
     ConvTest(con_result_indices ,con_result_samples )
-            
-
-    
-    
-
-
-    # N = len(samples)
-
-    # for n in range(N):
-    #     sum_val = 0
-    #     for k in range(len(indices)):
-    #         sum_val += indices[k] * samples[n - k]
-    #         con_result.append(sum_val)
-    #     print(con_result)
 
 
 def ConvTest(Your_indices, Your_samples):
