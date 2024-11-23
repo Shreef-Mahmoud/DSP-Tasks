@@ -215,6 +215,45 @@ def QuantizationTest2(Your_IntervalIndices,Your_EncodedValues,Your_QuantizedValu
             return
     mb.showinfo("Test Case Passed", "QuantizationTest1 Test case passed successfully.")
 
+def Compare_Signals(Your_indices,Your_samples):
+    file_name = filedialog.askopenfilename(title="Choose The Compare File", filetypes=(("text files", ".txt"), ("all files", ".*")))
+    expected_indices=[]
+    expected_samples=[]
+    with open(file_name, 'r') as f:
+        line = f.readline()
+        line = f.readline()
+        line = f.readline()
+        line = f.readline()
+        while line:
+            # process line
+            L=line.strip()
+            if len(L.split(' '))==2:
+                L=line.split(' ')
+                V1=int(L[0])
+                V2=float(L[1])
+                expected_indices.append(V1)
+                expected_samples.append(V2)
+                line = f.readline()
+            else:
+                break
+    print("Current Output Test file is: ")
+    print(file_name)
+    print("\n")
+    if (len(expected_samples)!=len(Your_samples)) and (len(expected_indices)!=len(Your_indices)):
+        mb.showerror("Shift_Fold_Signal Test case failed", "your signal have different values from the expected one.")
+        return
+    for i in range(len(Your_indices)):
+        if(Your_indices[i]!=expected_indices[i]):
+            mb.showerror("Shift_Fold_Signal Test case failed", "your signal have different indicies from the expected one.")
+            return
+    for i in range(len(expected_samples)):
+        if abs(Your_samples[i] - expected_samples[i]) < 0.01:
+            continue
+        else:
+            mb.showerror("Correlation Test case failed", "your signal have different values from the expected one.")
+            return
+    mb.showinfo("Test Case Passed", "Correlation Test case passed successfully")
+
 def Shift_Fold_Signal(Your_indices,Your_samples):  
     file_name = filedialog.askopenfilename(title="Choose The Compare File", filetypes=(("text files", ".txt"), ("all files", ".*")))    
     expected_indices=[]
@@ -470,7 +509,7 @@ def DFT_Operation():
             a = samples[x] * (math.cos(2 * math.pi * i * x / len(indices)) - math.sin(2 * math.pi * i * x / len(indices)) * 1j)
             temp += a
         DFTresult.append(temp)
-    
+
     amplitude_list = []
     angle_list = []
 
@@ -694,6 +733,115 @@ def DCT_Operation():
     ax1.set_title("DCT Coefficients")
     plt.show()
     SignalAreEqual(DCTresult)
+
+def DC_component():
+    filepath = openFile()
+    indices, samples = readfile(filepath)
+    mean_value = np.mean(samples)
+    dc_component = (samples - mean_value)
+    SignalSamplesAreEqual(indices, dc_component)
+
+
+def moving_average():
+    filepath = openFile()
+    indices, samples = readfile(filepath)
+
+    window_size_str = simpledialog.askstring("Input", "Enter the number of points for averaging (window size):")
+
+    try:
+        window_size = int(window_size_str)
+
+        if window_size <= 0:
+            print("Window size must be a positive integer.")
+            return
+        elif window_size > len(samples):
+            print("Window size must be less than or equal to the number of samples.")
+            return
+
+    except ValueError:
+        print("Invalid input. Please enter a valid integer.")
+        return
+
+    output_length = len(samples) - window_size + 1
+    y = []
+
+    for n in range(output_length):
+        avg_value = np.mean(samples[n:n + window_size])
+        y.append(avg_value)
+
+    output_indices = indices[:output_length]
+
+    fig, ax = plt.subplots()
+    ax.plot(indices, samples, label="Original Signal", color='blue')
+    ax.plot(output_indices, y, label="Smoothed Signal (Moving Average)", color='red', linestyle='--')
+    ax.set_xlabel('Index')
+    ax.set_ylabel('Amplitude')
+    ax.set_title('Signal Smoothing: Moving Average')
+    ax.legend()
+    plt.show()
+    SignalSamplesAreEqual(indices, y)
+
+
+def Crosscorrelation():
+    filepath1 = openFile()
+    signal1_indices, signal1_samples = readfile(filepath1)
+    filepath2 = openFile()
+    signal2_indices, signal2_samples = readfile(filepath2)
+    N = len(signal1_samples)
+    p12 = []
+
+    for j in range(N):
+        rotated_signal2 = signal2_samples[j:] + signal2_samples[:j]
+        sum_val = sum(signal1_samples[n] * rotated_signal2[n] for n in range(N))
+        signal1 = sum(signal1_samples[n] ** 2 for n in range(N))
+        signal2 = sum(rotated_signal2[n] ** 2 for n in range(N))
+        denominator = np.sqrt(signal1 * signal2)
+        p12.append(round(sum_val / denominator, 8))
+    Compare_Signals(signal1_indices, p12)
+
+def Convolution():
+    filepath = openFile()
+    indices, samples = readfile(filepath)
+    con_result = []
+    N = len(samples)
+    for n in range(N):
+        sum_val = 0
+        for k in range(len(indices)):
+            sum_val += indices[k] * samples[n - k]
+            con_result.append(sum_val)
+        print(con_result)
+
+
+def ConvTest(Your_indices, Your_samples):
+    """
+    Test inputs
+    InputIndicesSignal1 =[-2, -1, 0, 1]
+    InputSamplesSignal1 = [1, 2, 1, 1 ]
+
+    InputIndicesSignal2=[0, 1, 2, 3, 4, 5 ]
+    InputSamplesSignal2 = [ 1, -1, 0, 0, 1, 1 ]
+    """
+
+    expected_indices = [-2, -1, 0, 1, 2, 3, 4, 5, 6]
+    expected_samples = [1, 1, -1, 0, 0, 3, 3, 2, 1]
+
+    if (len(expected_samples) != len(Your_samples)) and (len(expected_indices) != len(Your_indices)):
+        mb.showerror("Conv Test case failed", "your signal have different length from the expected one.")
+        return
+    for i in range(len(Your_indices)):
+        if (Your_indices[i] != expected_indices[i]):
+            mb.showerror("Conv Test case failed", "your signal have different indicies from the expected one.")
+            return
+    for i in range(len(expected_samples)):
+        if abs(Your_samples[i] - expected_samples[i]) < 0.01:
+            continue
+        else:
+            mb.showerror("Conv Test case failed", "your signal have different values from the expected one.")
+            return
+    mb.showinfo("Test Case Passed", "Conv Test case passed successfully")
+
+
+
 def mathOperation ():
 
     if operations.get() == "Add":
@@ -801,6 +949,14 @@ def mathOperation ():
         DerivativeSignal()
     elif operations.get() == "DCT":
         DCT_Operation()
+    elif operations.get() == "correlation":
+        Crosscorrelation()
+    elif operations.get() == "DC_component":
+        DC_component()
+    elif operations.get() == "moving_average":
+        moving_average()
+    elif operations.get() == "Convolution":
+        Convolution()
 
 def plotingSignal(indices, samples, samplingFrequency):
     indicesArr = np.array(indices)
@@ -851,7 +1007,7 @@ mycombo1.current(0)
 label =ttk.Label(myframe, text="Arithmetic Operations", font="Calibre 20 bold")
 label.place(relx=0.5, rely=0.5, x=400, y=-250, anchor="center")
 
-operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize", "DFT", "IDFT", "Fold", "Shift", "Sharpening", "DCT"], width=47)
+operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize", "DFT", "IDFT", "Fold", "Shift", "Sharpening", "DCT", "correlation", "Convolution", "DC_component", "moving_average"], width=47)
 operations.place(relx=0.5, rely=0.5, x=400, y=-200, anchor="center")
 operations.current(0)
 
