@@ -801,15 +801,42 @@ def Crosscorrelation():
 
 def Convolution():
     filepath = openFile()
-    indices, samples = readfile(filepath)
-    con_result = []
-    N = len(samples)
-    for n in range(N):
-        sum_val = 0
-        for k in range(len(indices)):
-            sum_val += indices[k] * samples[n - k]
-            con_result.append(sum_val)
-        print(con_result)
+    indices_signal1, samples_signal1 = readfile(filepath)
+    filepath = openFile()
+    indices_signal2, samples_signal2 = readfile(filepath)
+
+    start = indices_signal1[0] + indices_signal2[0]
+    end = indices_signal1[-1] + indices_signal2[-1]
+
+    con_result_indices = []
+    con_result_samples = []
+
+    for i in range(start ,end +1):
+        conv_sum = 0
+        for j in range(len(samples_signal1)): 
+            for k in range(len(samples_signal2)):  
+                if indices_signal1[j] + indices_signal2[k] == i:
+                    conv_sum += samples_signal1[j] * samples_signal2[k]
+
+        con_result_indices.append(i)
+        con_result_samples.append(conv_sum)
+
+
+    ConvTest(con_result_indices ,con_result_samples )
+            
+
+    
+    
+
+
+    # N = len(samples)
+
+    # for n in range(N):
+    #     sum_val = 0
+    #     for k in range(len(indices)):
+    #         sum_val += indices[k] * samples[n - k]
+    #         con_result.append(sum_val)
+    #     print(con_result)
 
 
 def ConvTest(Your_indices, Your_samples):
