@@ -513,7 +513,8 @@ def DFT_Operation():
     amplitude_list = []
     angle_list = []
 
-
+    if operations.get() == "DC_component_freq":
+        return list(indices) , list(DFTresult)
 
     for i in range(len(DFTresult)):
         angle = math.atan2(np.imag(DFTresult[i]),  np.real(DFTresult[i]))
@@ -572,12 +573,18 @@ def DFT_Operation():
 
 
 
-def IDFT_Operation():
-    filepath = openFile()
-    amp, phase = readfile_DFT(filepath)
+def IDFT_Operation( amp_para = [] , phase_para = []):
+    if operations.get() == "DC_component_freq":
+        amp = list(amp_para)
+        phase = list(phase_para)
+    else : 
+        filepath = openFile()
+        amp, phase = readfile_DFT(filepath)
 
     N = len(amp)
     IDFTresult = []
+
+    
 
 
     values = np.array([amplitude * (math.cos(phase) + 1j * math.sin(phase)) for amplitude, phase in zip(amp, phase)])
@@ -598,6 +605,9 @@ def IDFT_Operation():
     indices = []
     for i in range(len(samples)):
         indices.append(i)
+
+    if operations.get() == "DC_component_freq":
+        return list(indices) , list(samples)
 
     plotingSignal(indices, samples, 1)
 
@@ -734,13 +744,45 @@ def DCT_Operation():
     plt.show()
     SignalAreEqual(DCTresult)
 
-def DC_component():
+def DC_component_time_domain():
     filepath = openFile()
     indices, samples = readfile(filepath)
     mean_value = np.mean(samples)
     dc_component = (samples - mean_value)
     SignalSamplesAreEqual(indices, dc_component)
 
+
+def DC_component_freq_domain():
+    index_dft , sampledft = DFT_Operation()
+    
+    counter = 0
+    for i in index_dft:
+        if i == 0:
+            break
+        else :
+            counter += 1
+    
+    sampledft[counter] = 0
+
+    angle_list = []
+    amplitude_list = []
+
+    for i in range(len(sampledft)):
+        angle = math.atan2(np.imag(sampledft[i]),  np.real(sampledft[i]))
+        amplitude = math.sqrt(math.pow(np.real(sampledft[i]), 2) + math.pow(np.imag(sampledft[i]), 2))
+        amplitude_list.append(amplitude)
+        angle_list.append(angle)
+
+    index , sample = IDFT_Operation(amplitude_list , angle_list)
+    SignalSamplesAreEqual(index, sample)
+
+
+
+
+    
+
+
+    
 
 def moving_average():
     filepath = openFile()
@@ -977,8 +1019,10 @@ def mathOperation ():
         DCT_Operation()
     elif operations.get() == "correlation":
         Crosscorrelation()
-    elif operations.get() == "DC_component":
-        DC_component()
+    elif operations.get() == "DC_component_time":
+        DC_component_time_domain()
+    elif operations.get() == "DC_component_freq":
+        DC_component_freq_domain()
     elif operations.get() == "moving_average":
         moving_average()
     elif operations.get() == "Convolution":
@@ -1033,7 +1077,7 @@ mycombo1.current(0)
 label =ttk.Label(myframe, text="Arithmetic Operations", font="Calibre 20 bold")
 label.place(relx=0.5, rely=0.5, x=400, y=-250, anchor="center")
 
-operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize", "DFT", "IDFT", "Fold", "Shift", "Sharpening", "DCT", "correlation", "Convolution", "DC_component", "moving_average"], width=47)
+operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize", "DFT", "IDFT", "Fold", "Shift", "Sharpening", "DCT", "correlation", "Convolution", "DC_component_time" , "DC_component_freq", "moving_average"], width=47)
 operations.place(relx=0.5, rely=0.5, x=400, y=-200, anchor="center")
 operations.current(0)
 
