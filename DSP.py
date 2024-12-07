@@ -4,7 +4,7 @@ from tkinter import simpledialog
 from tkinter import filedialog
 from tkinter import messagebox as mb
 from tkinter.filedialog import asksaveasfilename
-
+from scipy.signal import convolve
 from PIL import Image, ImageTk
 import math
 import numpy as np
@@ -22,7 +22,7 @@ def SignalComapreAmplitude(SignalInput, SignalOutput):
         if abs(float(SignalInput[i]) - float(SignalOutput[i])) > 0.001:
             print(f"Amplitude mismatch at index {i}")
             return False
-    
+
     return True
 
 def RoundPhaseShift(P):
@@ -199,7 +199,7 @@ def QuantizationTest2(Your_IntervalIndices,Your_EncodedValues,Your_QuantizedValu
         if(Your_EncodedValues[i]!=expectedEncodedValues[i]):
             mb.showerror("Test Case Failed", "Your EncodedValues have different EncodedValues from the expected one.")
             return
-        
+
     for i in range(len(expectedQuantizedValues)):
         if abs(Your_QuantizedValues[i] - expectedQuantizedValues[i]) < 0.01:
             continue
@@ -254,8 +254,8 @@ def Compare_Signals(Your_indices,Your_samples):
             return
     mb.showinfo("Test Case Passed", "Correlation Test case passed successfully")
 
-def Shift_Fold_Signal(Your_indices,Your_samples):  
-    file_name = filedialog.askopenfilename(title="Choose The Compare File", filetypes=(("text files", ".txt"), ("all files", ".*")))    
+def Shift_Fold_Signal(Your_indices,Your_samples):
+    file_name = filedialog.askopenfilename(title="Choose The Compare File", filetypes=(("text files", ".txt"), ("all files", ".*")))
     expected_indices=[]
     expected_samples=[]
     with open(file_name, 'r') as f:
@@ -283,13 +283,13 @@ def Shift_Fold_Signal(Your_indices,Your_samples):
         return
     for i in range(len(Your_indices)):
         if(Your_indices[i]!=expected_indices[i]):
-            print("Shift_Fold_Signal Test case failed, your signal have different indicies from the expected one") 
+            print("Shift_Fold_Signal Test case failed, your signal have different indicies from the expected one")
             return
     for i in range(len(expected_samples)):
         if abs(Your_samples[i] - expected_samples[i]) < 0.01:
             continue
         else:
-            print("Shift_Fold_Signal Test case failed, your signal have different values from the expected one") 
+            print("Shift_Fold_Signal Test case failed, your signal have different values from the expected one")
             return
     mb.showinfo("Test Case Passed", "Shift_Fold_Signal Test case passed successfully")
 
@@ -315,29 +315,29 @@ def readfile(filepath):
 def readfile_DFT(filepath):
     expected_indices = []
     expected_samples = []
-    
+
     with open(filepath, 'r') as f:
         SignalType = f.readline().strip().lower() == 'true'
         IsPeriodic = f.readline().strip().lower() == 'true'
         N1 = int(f.readline().strip())
-        
+
 
 
         line = f.readline()
         while line:
             L = line.strip()
-            
+
 
             if ',' in L:
                 L = L.split(',')
             else:
                 L = L.split()
-            
+
 
             if len(L) != 2:
                 line = f.readline()
                 continue
-            
+
 
             V1_str = L[0].strip()
             if V1_str.endswith('f'):
@@ -347,7 +347,7 @@ def readfile_DFT(filepath):
             except ValueError:
                 line = f.readline()
                 continue
-            
+
 
             V2_str = L[1].strip()
             if V2_str.endswith('f'):
@@ -357,12 +357,12 @@ def readfile_DFT(filepath):
             except ValueError:
                 line = f.readline()
                 continue
-            
+
             expected_indices.append(V1)
             expected_samples.append(V2)
-            
+
             line = f.readline()
-    
+
     return expected_indices, expected_samples
 
 
@@ -457,7 +457,7 @@ def quantize_signal():
         end = round(start + delta, 5)
         intVaral.append([start, end])
         midpoints.append(round((start + end) / 2, 5))
-        start = end 
+        start = end
 
     quantized_signal = np.zeros_like(signal)
     interval_indices = []
@@ -502,7 +502,7 @@ def DFT_Operation():
     indices, samples = readfile(filepath)
 
     DFTresult = []
-    
+
     for i in range(len(indices)):
         temp = 0 + 0j
         for x in range(len(indices)):
@@ -523,7 +523,7 @@ def DFT_Operation():
         angle_list.append(angle)
 
 
-    
+
 
     fs = simpledialog.askstring("Input", "Enter The Sampling Frequency")
     fs = float(fs)
@@ -541,15 +541,15 @@ def DFT_Operation():
     samplesArr_amplitude = np.array(amplitude_list)
     samplesArr_Angle = np.array(angle_list)
 
-    fig1, ax1 = plt.subplots() 
-    ax1.stem(indicesArr, samplesArr_amplitude) 
+    fig1, ax1 = plt.subplots()
+    ax1.stem(indicesArr, samplesArr_amplitude)
     ax1.set_xlabel("Amplitude")
     ax1.set_ylabel("Frequency")
     ax1.set_title("Signal Amplitude Frequncy Domain")
 
 
-    fig1, ax1 = plt.subplots() 
-    ax1.stem(indicesArr, samplesArr_Angle) 
+    fig1, ax1 = plt.subplots()
+    ax1.stem(indicesArr, samplesArr_Angle)
     ax1.set_xlabel("Angle (in radian)")
     ax1.set_ylabel("Frequency")
     ax1.set_title("Signal Angle Frequncy Domain")
@@ -577,14 +577,14 @@ def IDFT_Operation( amp_para = [] , phase_para = []):
     if operations.get() == "DC_component_freq":
         amp = list(amp_para)
         phase = list(phase_para)
-    else : 
+    else :
         filepath = openFile()
         amp, phase = readfile_DFT(filepath)
 
     N = len(amp)
     IDFTresult = []
 
-    
+
 
 
     values = np.array([amplitude * (math.cos(phase) + 1j * math.sin(phase)) for amplitude, phase in zip(amp, phase)])
@@ -594,11 +594,11 @@ def IDFT_Operation( amp_para = [] , phase_para = []):
         for k in range(N):
             a = values[k] * (math.cos(2 * math.pi * k * n / N) + 1j * math.sin(2 * math.pi * k * n / N))
             temp += a
-        temp /= N 
+        temp /= N
         IDFTresult.append(temp)
 
     rounded_IDFTresult = [round(temp.real, 5) + round(temp.imag, 5) * 1j for temp in IDFTresult]
-    
+
     samples = np.real(rounded_IDFTresult)
     samples = list(samples)
 
@@ -634,7 +634,7 @@ def shifting_signals(isFolded):
 
     else:
         indices_arr -= shift_amount
-        
+
     indices = list(indices_arr)
 
 
@@ -753,15 +753,15 @@ def DC_component_time_domain():
 
 
 def DC_component_freq_domain():
-    index_dft , sampledft = DFT_Operation()
-    
+    index_dft, sampledft = DFT_Operation()
+
     counter = 0
     for i in index_dft:
         if i == 0:
             break
-        else :
+        else:
             counter += 1
-    
+
     sampledft[counter] = 0
 
     angle_list = []
@@ -773,16 +773,16 @@ def DC_component_freq_domain():
         amplitude_list.append(amplitude)
         angle_list.append(angle)
 
-    index , sample = IDFT_Operation(amplitude_list , angle_list)
+    index, sample = IDFT_Operation(amplitude_list, angle_list)
     SignalSamplesAreEqual(index, sample)
 
 
 
 
-    
 
 
-    
+
+
 
 def moving_average():
     filepath = openFile()
@@ -853,10 +853,10 @@ def Convolution():
     con_result_indices = []
     con_result_samples = []
 
-    for i in range(start ,end +1):
+    for i in range(start, end + 1):
         conv_sum = 0
-        for j in range(len(samples_signal1)): 
-            for k in range(len(samples_signal2)):  
+        for j in range(len(samples_signal1)):
+            for k in range(len(samples_signal2)):
                 if indices_signal1[j] + indices_signal2[k] == i:
                     conv_sum += samples_signal1[j] * samples_signal2[k]
 
@@ -877,7 +877,7 @@ def Convolution():
     ax2.axhline(0, color='black', linewidth=1)
     plt.show()
 
-    ConvTest(con_result_indices ,con_result_samples )
+    ConvTest(con_result_indices, con_result_samples)
 
 
 def ConvTest(Your_indices, Your_samples):
@@ -909,6 +909,213 @@ def ConvTest(Your_indices, Your_samples):
     mb.showinfo("Test Case Passed", "Conv Test case passed successfully")
 
 
+def FIR_filter():
+    # filepath = openFile()
+    # indices, samples = readfile(filepath)
+
+    fs = float(simpledialog.askstring("Input", "Enter the sampling frequency (Hz):"))
+    filter_type = simpledialog.askstring("Input", "Enter filter type (low, high, bandpass, bandstop):").lower()
+    stop_attenuation = float(simpledialog.askstring("Input", "Enter the stop band attenuation (δs):"))
+    transition_band = float(simpledialog.askstring("Input", "Enter the transition band (Hz):"))
+
+    if filter_type in ["low", "high"]:
+        cutoff_freq = float(simpledialog.askstring("Input", "Enter the cutoff frequency (Hz):"))
+    elif filter_type in ["bandpass", "bandstop"]:
+        f1 = float(simpledialog.askstring("Input", "Enter the lower cutoff frequency (Hz):"))
+        f2 = float(simpledialog.askstring("Input", "Enter the upper cutoff frequency (Hz):"))
+    else:
+        mb.showerror("Error", "Invalid filter type!")
+        return
+
+    delta_f_normalized = transition_band / fs
+    if filter_type in ["low", "high"]:
+        cutoff = (cutoff_freq + (transition_band / 2)) / fs
+    elif filter_type in ["bandpass", "bandstop"]:
+        cutoff_1 = (f1 - (transition_band / 2)) / fs
+        cutoff_2 = (f2 + (transition_band / 2)) / fs
+
+    if stop_attenuation <= 21:
+        constant = 0.9
+        window_name = "Rectangular"
+    elif stop_attenuation <= 44:
+        constant = 3.1
+        window_name = "Hanning"
+    elif stop_attenuation <= 53:
+        constant = 3.3
+        window_name = "Hamming"
+    else:
+        constant = 5.5
+        window_name = "Blackman"
+
+    N = int(np.ceil(constant / delta_f_normalized))
+    if N % 2 == 0:
+        N += 1
+    middle = N // 2
+
+    h_d = np.zeros(N)
+    if filter_type == "low":
+        for n in range(-middle, middle + 1):
+            if n == 0:
+                h_d[n + middle] = 2 * cutoff
+            else:
+                h_d[n + middle] = np.sin(2 * np.pi * cutoff * n) / (np.pi * n)
+    elif filter_type == "high":
+        for n in range(-middle, middle + 1):
+            if n == 0:
+                h_d[n + middle] = 1 - (2 * cutoff)
+            else:
+                h_d[n + middle] = -(np.sin(2 * np.pi * cutoff * n) / (np.pi * n))
+    elif filter_type == "bandpass":
+        for n in range(-middle, middle + 1):
+            if n == 0:
+                h_d[n + middle] = 2 * (cutoff_2 - cutoff_1)
+            else:
+                h_d[n + middle] = (np.sin(2 * np.pi * cutoff_2 * n) - np.sin(2 * np.pi * cutoff_1 * n)) / (np.pi * n)
+    elif filter_type == "bandstop":
+        for n in range(-middle, middle + 1):
+            if n == 0:
+                h_d[n + middle] = 1 - 2 * (cutoff_2 - cutoff_1)
+            else:
+                h_d[n + middle] = (np.sin(2 * np.pi * cutoff_1 * n) - np.sin(2 * np.pi * cutoff_2 * n)) / (np.pi * n)
+
+    n = np.arange(-middle, middle + 1)
+    if window_name == "Rectangular":
+        window = 1
+    elif window_name == "Hanning":
+        window = 0.5 + 0.5 * np.cos(2 * np.pi * n / N)
+    elif window_name == "Hamming":
+        window = 0.54 + 0.46 * np.cos(2 * np.pi * n / N)
+    elif window_name == "Blackman":
+        window = 0.42 + 0.5 * np.cos(2 * np.pi * n / (N - 1)) + 0.08 * np.cos(4 * np.pi * n / (N - 1))
+
+    h = h_d * window
+
+    indices = np.arange(-middle, middle + 1)
+    coefficients_with_indices = np.column_stack((indices, h))
+    save_path = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Text Files", "*.txt")])
+    if save_path:
+        np.savetxt(save_path, coefficients_with_indices, fmt=["%d", "%.10f"])
+        mb.showinfo("Success", f"Filter coefficients saved to {save_path}")
+
+    input_file = filedialog.askopenfilename(filetypes=[("Text Files", "*.txt")])
+    if not input_file:
+        mb.showerror("Error", "Input signal file not provided!")
+        return
+
+    fig, ax = plt.subplots()
+    ax.plot(indices, h)
+    ax.stem(indices, h)
+    ax.set_xlabel("Sample Index")
+    ax.set_ylabel("Amplitude")
+    ax.set_title("Original vs. Filtered Signal")
+    ax.legend()
+    plt.show()
+
+    Compare_Signals(indices, h)
+
+def FIR():
+    filepath = openFile()
+    indices, samples = readfile(filepath)
+
+    fs = float(simpledialog.askstring("Input", "Enter the sampling frequency (Hz):"))
+    filter_type = simpledialog.askstring("Input", "Enter filter type (low, high, bandpass, bandstop):").lower()
+    stop_attenuation = float(simpledialog.askstring("Input", "Enter the stop band attenuation (δs):"))
+    transition_band = float(simpledialog.askstring("Input", "Enter the transition band (Hz):"))
+
+    if filter_type in ["low", "high"]:
+        cutoff_freq = float(simpledialog.askstring("Input", "Enter the cutoff frequency (Hz):"))
+    elif filter_type in ["bandpass", "bandstop"]:
+        f1 = float(simpledialog.askstring("Input", "Enter the lower cutoff frequency (Hz):"))
+        f2 = float(simpledialog.askstring("Input", "Enter the upper cutoff frequency (Hz):"))
+    else:
+        mb.showerror("Error", "Invalid filter type!")
+        return
+
+    delta_f_normalized = transition_band / fs
+    if filter_type in ["low", "high"]:
+        cutoff = (cutoff_freq + (transition_band / 2)) / fs
+    elif filter_type in ["bandpass", "bandstop"]:
+        cutoff_1 = (f1 - (transition_band / 2)) / fs
+        cutoff_2 = (f2 + (transition_band / 2)) / fs
+
+    if stop_attenuation <= 21:
+        constant = 0.9
+        window_name = "Rectangular"
+    elif stop_attenuation <= 44:
+        constant = 3.1
+        window_name = "Hanning"
+    elif stop_attenuation <= 53:
+        constant = 3.3
+        window_name = "Hamming"
+    else:
+        constant = 5.5
+        window_name = "Blackman"
+
+    N = int(np.ceil(constant / delta_f_normalized))
+    if N % 2 == 0:
+        N += 1
+    middle = N // 2
+
+    h_d = np.zeros(N)
+    if filter_type == "low":
+        for n in range(-middle, middle + 1):
+            if n == 0:
+                h_d[n + middle] = 2 * cutoff
+            else:
+                h_d[n + middle] = np.sin(2 * np.pi * cutoff * n) / (np.pi * n)
+    elif filter_type == "high":
+        for n in range(-middle, middle + 1):
+            if n == 0:
+                h_d[n + middle] = 1 - (2 * cutoff)
+            else:
+                h_d[n + middle] = -(np.sin(2 * np.pi * cutoff * n) / (np.pi * n))
+    elif filter_type == "bandpass":
+        for n in range(-middle, middle + 1):
+            if n == 0:
+                h_d[n + middle] = 2 * (cutoff_2 - cutoff_1)
+            else:
+                h_d[n + middle] = (np.sin(2 * np.pi * cutoff_2 * n) - np.sin(2 * np.pi * cutoff_1 * n)) / (np.pi * n)
+    elif filter_type == "bandstop":
+        for n in range(-middle, middle + 1):
+            if n == 0:
+                h_d[n + middle] = 1 - 2 * (cutoff_2 - cutoff_1)
+            else:
+                h_d[n + middle] = (np.sin(2 * np.pi * cutoff_1 * n) - np.sin(2 * np.pi * cutoff_2 * n)) / (np.pi * n)
+
+    n = np.arange(N)
+    if window_name == "Rectangular":
+        window = 1
+    elif window_name == "Hanning":
+        window = 0.5 + 0.5 * np.cos(2 * np.pi * n / N)
+    elif window_name == "Hamming":
+        window = 0.54 + 0.46 * np.cos(2 * np.pi * n / N)
+    elif window_name == "Blackman":
+        window = 0.42 + 0.5 * np.cos(2 * np.pi * n / (N - 1)) + 0.08 * np.cos(4 * np.pi * n / (N - 1))
+
+    h = h_d * window
+
+    indices1 = np.arange(-middle, middle + 1)
+    coefficients_with_indices = np.column_stack((indices1, h))
+    save_path = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Text Files", "*.txt")])
+    if save_path:
+        np.savetxt(save_path, coefficients_with_indices, fmt=["%d", "%.10f"])
+        mb.showinfo("Success", f"Filter coefficients saved to {save_path}")
+
+    input_file = filedialog.askopenfilename(filetypes=[("Text Files", "*.txt")])
+    if not input_file:
+        mb.showerror("Error", "Input signal file not provided!")
+        return
+
+    fig, ax = plt.subplots()
+    ax.plot(indices1, h)
+    ax.stem(indices1, h)
+    ax.set_xlabel("Sample Index")
+    ax.set_ylabel("Amplitude")
+    ax.set_title("Original vs. Filtered Signal")
+    ax.legend()
+    plt.show()
+
+    Compare_Signals(samples, h)
 
 def mathOperation ():
 
@@ -1005,7 +1212,7 @@ def mathOperation ():
 
     elif operations.get() == "Quantize":
         quantize_signal()
-    
+
     elif operations.get() == "DFT":
         DFT_Operation()
     elif operations.get() == "IDFT":
@@ -1027,6 +1234,10 @@ def mathOperation ():
         moving_average()
     elif operations.get() == "Convolution":
         Convolution()
+    elif operations.get() == "FIR_filters":
+        FIR_filter()
+    elif operations.get() == "FIR":
+        FIR()
 
 def plotingSignal(indices, samples, samplingFrequency):
     indicesArr = np.array(indices)
@@ -1034,7 +1245,7 @@ def plotingSignal(indices, samples, samplingFrequency):
 
     fig1, ax1 = plt.subplots()
     ax1.stem(indicesArr, samplesArr)
-    ax1.set_xlim(indicesArr[0], indicesArr[0] + samplingFrequency * 0.1) 
+    ax1.set_xlim(indicesArr[0], indicesArr[0] + samplingFrequency * 0.1)
     ax1.set_xlabel("Sample Index")
     ax1.set_ylabel("Amplitude")
     ax1.set_title("Digital Signal")
@@ -1042,7 +1253,7 @@ def plotingSignal(indices, samples, samplingFrequency):
     timeArr = indicesArr / samplingFrequency
     fig2, ax2 = plt.subplots()
     ax2.plot(timeArr, samplesArr)
-    ax2.set_xlim(timeArr[0], timeArr[0] + 0.1) 
+    ax2.set_xlim(timeArr[0], timeArr[0] + 0.1)
     ax2.set_xlabel("Time (seconds)")
     ax2.set_ylabel("Amplitude")
     ax2.set_title("Analog Signal")
@@ -1077,7 +1288,11 @@ mycombo1.current(0)
 label =ttk.Label(myframe, text="Arithmetic Operations", font="Calibre 20 bold")
 label.place(relx=0.5, rely=0.5, x=400, y=-250, anchor="center")
 
-operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square", "Normalize", "Accumulate", "Quantize", "DFT", "IDFT", "Fold", "Shift", "Sharpening", "DCT", "correlation", "Convolution", "DC_component_time" , "DC_component_freq", "moving_average"], width=47)
+operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply", "Square",
+                                           "Normalize", "Accumulate", "Quantize", "DFT", "IDFT",
+                                           "Fold", "Shift", "Sharpening", "DCT", "correlation",
+                                           "Convolution", "DC_component_time", "DC_component_freq",
+                                           "moving_average", "FIR_filters", "FIR"], width=47)
 operations.place(relx=0.5, rely=0.5, x=400, y=-200, anchor="center")
 operations.current(0)
 
