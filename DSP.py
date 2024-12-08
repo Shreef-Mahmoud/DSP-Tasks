@@ -577,7 +577,7 @@ def IDFT_Operation( amp_para = [] , phase_para = []):
     if operations.get() == "DC_component_freq":
         amp = list(amp_para)
         phase = list(phase_para)
-    else :
+    else:
         filepath = openFile()
         amp, phase = readfile_DFT(filepath)
 
@@ -607,7 +607,7 @@ def IDFT_Operation( amp_para = [] , phase_para = []):
         indices.append(i)
 
     if operations.get() == "DC_component_freq":
-        return list(indices) , list(samples)
+        return list(indices), list(samples)
 
     plotingSignal(indices, samples, 1)
 
@@ -777,13 +777,6 @@ def DC_component_freq_domain():
     SignalSamplesAreEqual(index, sample)
 
 
-
-
-
-
-
-
-
 def moving_average():
     filepath = openFile()
     indices, samples = readfile(filepath)
@@ -841,11 +834,18 @@ def Crosscorrelation():
         p12.append(round(sum_val / denominator, 8))
     Compare_Signals(signal1_indices, p12)
 
-def Convolution():
-    filepath = openFile()
-    indices_signal1, samples_signal1 = readfile(filepath)
-    filepath = openFile()
-    indices_signal2, samples_signal2 = readfile(filepath)
+def Convolution(indices1=[], h=[]):
+
+    if operations.get() == "FIR":
+        filepath = openFile()
+        indices_signal1, samples_signal1 = indices1, h
+        indices_signal2, samples_signal2 = readfile(filepath)
+
+    else:
+        filepath = openFile()
+        indices_signal1, samples_signal1 = readfile(filepath)
+        filepath = openFile()
+        indices_signal2, samples_signal2 = readfile(filepath)
 
     start = indices_signal1[0] + indices_signal2[0]
     end = indices_signal1[-1] + indices_signal2[-1]
@@ -862,6 +862,9 @@ def Convolution():
 
         con_result_indices.append(i)
         con_result_samples.append(conv_sum)
+
+    if operations.get() == "FIR":
+        return list(con_result_indices), list(con_result_samples)
 
     fig1, ax1 = plt.subplots()
     ax1.stem(con_result_indices, con_result_samples)
@@ -910,8 +913,6 @@ def ConvTest(Your_indices, Your_samples):
 
 
 def FIR_filter():
-    # filepath = openFile()
-    # indices, samples = readfile(filepath)
 
     fs = float(simpledialog.askstring("Input", "Enter the sampling frequency (Hz):"))
     filter_type = simpledialog.askstring("Input", "Enter filter type (low, high, bandpass, bandstop):").lower()
@@ -928,11 +929,16 @@ def FIR_filter():
         return
 
     delta_f_normalized = transition_band / fs
-    if filter_type in ["low", "high"]:
+    if filter_type in ["low"]:
         cutoff = (cutoff_freq + (transition_band / 2)) / fs
-    elif filter_type in ["bandpass", "bandstop"]:
+    elif filter_type in ["high"]:
+        cutoff = (cutoff_freq - (transition_band / 2)) / fs
+    elif filter_type in ["bandpass"]:
         cutoff_1 = (f1 - (transition_band / 2)) / fs
         cutoff_2 = (f2 + (transition_band / 2)) / fs
+    else:
+        cutoff_1 = (f1 + (transition_band / 2)) / fs
+        cutoff_2 = (f2 - (transition_band / 2)) / fs
 
     if stop_attenuation <= 21:
         constant = 0.9
@@ -1014,8 +1020,6 @@ def FIR_filter():
     Compare_Signals(indices, h)
 
 def FIR():
-    filepath = openFile()
-    indices, samples = readfile(filepath)
 
     fs = float(simpledialog.askstring("Input", "Enter the sampling frequency (Hz):"))
     filter_type = simpledialog.askstring("Input", "Enter filter type (low, high, bandpass, bandstop):").lower()
@@ -1032,11 +1036,16 @@ def FIR():
         return
 
     delta_f_normalized = transition_band / fs
-    if filter_type in ["low", "high"]:
+    if filter_type in ["low"]:
         cutoff = (cutoff_freq + (transition_band / 2)) / fs
-    elif filter_type in ["bandpass", "bandstop"]:
+    elif filter_type in ["high"]:
+        cutoff = (cutoff_freq - (transition_band / 2)) / fs
+    elif filter_type in ["bandpass"]:
         cutoff_1 = (f1 - (transition_band / 2)) / fs
         cutoff_2 = (f2 + (transition_band / 2)) / fs
+    else:
+        cutoff_1 = (f1 + (transition_band / 2)) / fs
+        cutoff_2 = (f2 - (transition_band / 2)) / fs
 
     if stop_attenuation <= 21:
         constant = 0.9
@@ -1095,7 +1104,10 @@ def FIR():
     h = h_d * window
 
     indices1 = np.arange(-middle, middle + 1)
-    coefficients_with_indices = np.column_stack((indices1, h))
+
+    index, sample = Convolution(indices1, h)
+
+    coefficients_with_indices = np.column_stack((index, sample))
     save_path = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Text Files", "*.txt")])
     if save_path:
         np.savetxt(save_path, coefficients_with_indices, fmt=["%d", "%.10f"])
@@ -1107,15 +1119,15 @@ def FIR():
         return
 
     fig, ax = plt.subplots()
-    ax.plot(indices1, h)
-    ax.stem(indices1, h)
+    # ax.plot(index, sample)
+    ax.stem(index, sample)
     ax.set_xlabel("Sample Index")
     ax.set_ylabel("Amplitude")
     ax.set_title("Original vs. Filtered Signal")
     ax.legend()
     plt.show()
 
-    Compare_Signals(samples, h)
+    Compare_Signals(index, sample)
 
 def mathOperation ():
 
