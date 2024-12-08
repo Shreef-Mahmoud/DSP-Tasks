@@ -1091,7 +1091,7 @@ def FIR():
             else:
                 h_d[n + middle] = (np.sin(2 * np.pi * cutoff_1 * n) - np.sin(2 * np.pi * cutoff_2 * n)) / (np.pi * n)
 
-    n = np.arange(N)
+    n = np.arange(-middle, middle + 1)
     if window_name == "Rectangular":
         window = 1
     elif window_name == "Hanning":
@@ -1119,8 +1119,8 @@ def FIR():
         return
 
     fig, ax = plt.subplots()
-    # ax.plot(index, sample)
-    ax.stem(index, sample)
+    ax.plot(index, sample)
+    # ax.stem(index, sample)
     ax.set_xlabel("Sample Index")
     ax.set_ylabel("Amplitude")
     ax.set_title("Original vs. Filtered Signal")
