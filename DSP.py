@@ -834,9 +834,13 @@ def Crosscorrelation():
         p12.append(round(sum_val / denominator, 8))
     Compare_Signals(signal1_indices, p12)
 
-def Convolution(indices1=[], h=[]):
+def Convolution(indices1=[], h=[] , index = [], sample = []):
 
-    if operations.get() == "FIR":
+    if operations.get() == "resampling":
+        indices_signal1, samples_signal1 = index, sample
+        indices_signal2, samples_signal2 = indices1, h
+
+    elif operations.get() == "FIR":
         filepath = openFile()
         indices_signal1, samples_signal1 = indices1, h
         indices_signal2, samples_signal2 = readfile(filepath)
@@ -863,7 +867,7 @@ def Convolution(indices1=[], h=[]):
         con_result_indices.append(i)
         con_result_samples.append(conv_sum)
 
-    if operations.get() == "FIR":
+    if operations.get() == "FIR" or operations.get() == "resampling" :
         return list(con_result_indices), list(con_result_samples)
 
     fig1, ax1 = plt.subplots()
@@ -1019,10 +1023,15 @@ def FIR_filter():
 
     Compare_Signals(indices, h)
 
-def FIR():
+def FIR(indexs = [] , sampls = [] ):
 
     fs = float(simpledialog.askstring("Input", "Enter the sampling frequency (Hz):"))
-    filter_type = simpledialog.askstring("Input", "Enter filter type (low, high, bandpass, bandstop):").lower()
+
+    if operations.get() != "resampling":
+        filter_type = simpledialog.askstring("Input", "Enter filter type (low, high, bandpass, bandstop):").lower()
+    else:
+        filter_type = "low"
+
     stop_attenuation = float(simpledialog.askstring("Input", "Enter the stop band attenuation (δs):"))
     transition_band = float(simpledialog.askstring("Input", "Enter the transition band (Hz):"))
 
@@ -1105,7 +1114,13 @@ def FIR():
 
     indices1 = np.arange(-middle, middle + 1)
 
+    if operations.get() == "resampling":
+        index, sample = Convolution(indices1, h , indexs , sampls)
+        return index, sample
+
     index, sample = Convolution(indices1, h)
+
+    
 
     coefficients_with_indices = np.column_stack((index, sample))
     save_path = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Text Files", "*.txt")])
@@ -1119,6 +1134,7 @@ def FIR():
         return
 
     fig, ax = plt.subplots()
+    ax.set_xlim(index[0], sample[0] + len(sample) * 0.1)
     ax.plot(index, sample)
     # ax.stem(index, sample)
     ax.set_xlabel("Sample Index")
@@ -1128,6 +1144,87 @@ def FIR():
     plt.show()
 
     Compare_Signals(index, sample)
+
+def resampling():
+    filepath = openFile()  # Assuming this function opens the file correctly
+    indices, samples = readfile(filepath)  # Assuming this function reads the file correctly
+
+    m = int(simpledialog.askstring("Input", "Enter the Value of M (Decimation Factor):"))
+    l = int(simpledialog.askstring("Input", "Enter the Value of L (Interpolation Factor):"))
+
+    if m < 0 or l < 0:
+        mb.showerror("Error", "Decimation and Interpolation factors must be non-negative.")
+        return
+
+    if m == 0 and l == 0:
+        mb.showerror("Error", "Both Decimation (M) and Interpolation (L) cannot be zero!")
+        return
+
+    if l > 1:
+        upsampled_indices = []
+        upsampled_samples = []
+
+        for i in range(len(indices)):
+            upsampled_indices.append(indices[i])
+            upsampled_samples.append(samples[i]) 
+            for _ in range(l - 1):
+                upsampled_indices.append(indices[i] + (_ + 1))
+                upsampled_samples.append(0) 
+
+        upsampled_indices = np.array(upsampled_indices)
+        upsampled_samples = np.array(upsampled_samples)
+
+        indices = upsampled_indices
+        upsampled_indices = []
+
+        for i in range(len(indices)):
+            upsampled_indices.append(indices[0] + i)
+
+        indices = upsampled_indices
+        samples = upsampled_samples
+
+    filtered_indices, filtered_samples = FIR(indices, samples)
+
+    if m > 1:
+        filtered_samples = filtered_samples[::m]
+        filtered_indices =filtered_indices[::m]
+        index_temp = []
+        i = 0
+        x = filtered_indices[0]
+        while (True):
+            index_temp.append(x)
+            i += 1
+            x += 1
+            if i == len(filtered_indices):
+                break
+
+
+        filtered_indices = index_temp
+
+    while filtered_samples and filtered_samples[-1] == 0:
+        filtered_samples.pop()    
+        filtered_indices.pop()
+
+    coefficients_with_indices = np.column_stack((filtered_indices, filtered_samples))
+    save_path = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Text Files", "*.txt")])
+    if save_path:
+        np.savetxt(save_path, coefficients_with_indices, fmt=["%d", "%.10f"])
+        mb.showinfo("Success", f"Filter coefficients saved to {save_path}")
+
+    fig, ax = plt.subplots()
+    ax.set_xlim(filtered_indices[0], filtered_samples[0] + len(filtered_samples) * 0.1)
+    ax.plot(filtered_indices, filtered_samples)
+    ax.set_xlabel("Sample Index")
+    ax.set_ylabel("Amplitude")
+    ax.set_title("Original vs. Filtered Signal")
+    ax.legend()
+    plt.show()
+
+    Compare_Signals(filtered_indices, filtered_samples)
+
+
+
+
 
 def mathOperation ():
 
@@ -1250,6 +1347,8 @@ def mathOperation ():
         FIR_filter()
     elif operations.get() == "FIR":
         FIR()
+    elif operations.get() == "resampling":
+        resampling()
 
 def plotingSignal(indices, samples, samplingFrequency):
     indicesArr = np.array(indices)
@@ -1304,7 +1403,7 @@ operations = ttk.Combobox(myframe, values=["None", "Add", "Subtract", "Multiply"
                                            "Normalize", "Accumulate", "Quantize", "DFT", "IDFT",
                                            "Fold", "Shift", "Sharpening", "DCT", "correlation",
                                            "Convolution", "DC_component_time", "DC_component_freq",
-                                           "moving_average", "FIR_filters", "FIR"], width=47)
+                                           "moving_average", "FIR_filters", "FIR" , "resampling"], width=47)
 operations.place(relx=0.5, rely=0.5, x=400, y=-200, anchor="center")
 operations.current(0)
 
